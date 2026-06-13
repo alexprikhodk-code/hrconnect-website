@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Реєстрація — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <div id="logoSlot" class="logo"></div>
+  <h1>Створити акаунт</h1>
+  <p class="subtitle">Безкоштовно — 2 тести на місяць у Free-плані</p>
+
+  <form id="registerForm">
+    <div class="form-group">
+      <label class="form-label">Ваше імʼя</label>
+      <input type="text" class="form-input" id="fullName" required minlength="2">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="email" required autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Телефон</label>
+      <input type="tel" class="form-input" id="phone" placeholder="+380...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Компанія (необовʼязково)</label>
+      <input type="text" class="form-input" id="company">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Пароль</label>
+      <input type="password" class="form-input" id="password" required minlength="6" autocomplete="new-password">
+    </div>
+    <div class="form-error" id="err"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Створити акаунт</button>
+  </form>
+
+  <p class="auth-bottom">Вже є акаунт? <a href="/login.html">Увійти</a></p>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('logoSlot').innerHTML = brandLogoSvg(56);
+document.getElementById('registerForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err'); err.textContent = '';
+  const fullName = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const company = document.getElementById('company').value.trim();
+  const password = document.getElementById('password').value;
+
+  const { data, error } = await sb.auth.signUp({
+    email, password,
+    options: { data: { full_name: fullName, phone, company } }
+  });
+  if (error) { err.textContent = '✗ ' + error.message; return; }
+
+  // Update profile with extra fields (trigger created baseline)
+  if (data.user) {
+    await sb.from('profiles').update({ full_name: fullName, phone, company }).eq('id', data.user.id);
+  }
+
+  err.style.color = 'var(--c-green)';
+  err.textContent = '✓ Підтвердіть email — лист надіслано на ' + email + '. Після підтвердження зайдіть у кабінет.';
+  setTimeout(() => { window.location.href = '/login.html'; }, 4000);
+};
+</script>
+</body>
+</html>

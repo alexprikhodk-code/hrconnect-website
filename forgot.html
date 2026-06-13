@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Відновлення паролю — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <div id="logoSlot" class="logo"></div>
+  <h1>Скидання паролю</h1>
+  <p class="subtitle">Введіть email — надішлемо посилання для відновлення</p>
+
+  <form id="forgotForm">
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="email" required>
+    </div>
+    <div class="form-error" id="err"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Надіслати посилання</button>
+  </form>
+
+  <p class="auth-bottom"><a href="/login.html">← Назад до входу</a></p>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('logoSlot').innerHTML = brandLogoSvg(56);
+document.getElementById('forgotForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err'); err.textContent = '';
+  const email = document.getElementById('email').value.trim();
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset.html'
+  });
+  if (error) { err.textContent = '✗ ' + error.message; return; }
+  err.style.color = 'var(--c-green)';
+  err.textContent = '✓ Перевірте email — посилання надіслано.';
+};
+</script>
+</body>
+</html>

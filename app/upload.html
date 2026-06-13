@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Завантажити тест — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item active">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar"><strong>Завантажити готовий тест</strong></div>
+    <div class="app-content">
+      <p class="muted">Якщо у вас вже є PDF-звіт із результатами тестування — завантажте його тут. Система розпарсить, побудує аналіз і додасть кандидата.</p>
+
+      <div class="card" style="border:2px dashed var(--c-line); text-align:center; padding:40px" id="drop">
+        <div style="font-size:42px; margin-bottom:8px">📄</div>
+        <strong>Перетягніть PDF сюди</strong>
+        <div class="muted mt-2">або клікніть, щоб вибрати файл</div>
+        <input type="file" id="fileInput" accept=".pdf" style="display:none">
+      </div>
+
+      <div id="status" class="mt-4"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>HRconnect</span>';
+(async () => { await requireAuth(); })();
+
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('fileInput');
+drop.onclick = () => fileInput.click();
+['dragover','dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.borderColor = 'var(--c-brand)'; }));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.borderColor = 'var(--c-line)'; }));
+drop.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) handle(ev.dataTransfer.files[0]); });
+fileInput.onchange = ev => { if (ev.target.files.length) handle(ev.target.files[0]); };
+
+async function handle(file) {
+  const status = document.getElementById('status');
+  status.innerHTML = '<div class="card"><strong>⏳ Обробляю ' + file.name + '...</strong></div>';
+  const user = await currentUser();
+
+  // Upload to Supabase Storage (optional — for record)
+  const path = user.id + '/' + Date.now() + '_' + file.name;
+  await sb.storage.from('test-files').upload(path, file).catch(() => {});
+
+  status.innerHTML = '<div class="card"><strong>📋 Файл збережено.</strong><br><br>' +
+    'Парсинг PDF і AI-аналіз потребують серверної функції. У наступному релізі. Поки що:<br>' +
+    '1. Скопіюйте відповіді з PDF<br>' +
+    '2. Перейдіть у чат Claude (як адмін), попросіть проаналізувати<br>' +
+    '3. Результат додасться у вашу базу</div>';
+}
+</script>
+</body></html>

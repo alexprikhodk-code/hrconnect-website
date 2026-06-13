@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Новий пароль — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <div id="logoSlot" class="logo"></div>
+  <h1>Новий пароль</h1>
+  <form id="resetForm">
+    <div class="form-group">
+      <label class="form-label">Новий пароль</label>
+      <input type="password" class="form-input" id="password" required minlength="6">
+    </div>
+    <div class="form-error" id="err"></div>
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Зберегти</button>
+  </form>
+</div>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('logoSlot').innerHTML = brandLogoSvg(56);
+document.getElementById('resetForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err'); err.textContent = '';
+  const password = document.getElementById('password').value;
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) { err.textContent = '✗ ' + error.message; return; }
+  err.style.color = 'var(--c-green)';
+  err.textContent = '✓ Пароль оновлено. Зараз перейдемо до кабінету...';
+  setTimeout(() => { window.location.href = '/app/'; }, 2000);
+};
+</script>
+</body></html>

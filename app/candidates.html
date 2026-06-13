@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кандидати — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <strong>Кандидати</strong>
+      <button class="btn btn-primary" onclick="openInvite()">+ Запросити кандидата</button>
+    </div>
+
+    <div class="app-content">
+      <p class="muted">Створіть запит на тестування — кандидат пройде тест за посиланням, результат зʼявиться у вас автоматично.</p>
+      <div id="list"></div>
+    </div>
+  </main>
+</div>
+
+<div id="modal" style="display:none; position:fixed; inset:0; background:rgba(15,30,50,0.55); z-index:100; align-items:center; justify-content:center;">
+  <div class="card" style="max-width:480px; width:90%">
+    <h3 style="margin-top:0">Новий кандидат</h3>
+    <form id="inviteForm">
+      <div class="form-group">
+        <label class="form-label">Імʼя кандидата</label>
+        <input type="text" class="form-input" id="invName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email (необовʼязково)</label>
+        <input type="email" class="form-input" id="invEmail">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Посада, на яку розглядаєте</label>
+        <input type="text" class="form-input" id="invPosition">
+      </div>
+      <div class="form-error" id="invErr"></div>
+      <div style="display:flex; gap:10px">
+        <button type="submit" class="btn btn-primary">Створити</button>
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('modal').style.display='none'">Скасувати</button>
+      </div>
+    </form>
+    <div id="inviteResult" style="display:none; margin-top:16px"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>HRconnect</span>';
+
+function openInvite() {
+  document.getElementById('modal').style.display = 'flex';
+  document.getElementById('inviteForm').style.display = 'block';
+  document.getElementById('inviteResult').style.display = 'none';
+  document.getElementById('invName').focus();
+}
+
+document.getElementById('inviteForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const user = await currentUser();
+  const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+  const { data, error } = await sb.from('candidates').insert({
+    user_id: user.id,
+    name: document.getElementById('invName').value.trim(),
+    email: document.getElementById('invEmail').value.trim() || null,
+    position: document.getElementById('invPosition').value.trim() || null,
+    test_link_token: token,
+    test_status: 'pending'
+  }).select().single();
+  if (error) { document.getElementById('invErr').textContent = error.message; return; }
+
+  const url = window.location.origin + '/test/?t=' + token;
+  document.getElementById('inviteForm').style.display = 'none';
+  document.getElementById('inviteResult').style.display = 'block';
+  document.getElementById('inviteResult').innerHTML =
+    '<div style="background:#dff2dc; padding:14px; border-radius:8px; color:#2e7d32; margin-bottom:14px"><strong>✓ Створено!</strong></div>' +
+    '<p>Посилання для кандидата:</p>' +
+    '<input type="text" readonly value="' + url + '" class="form-input" onclick="this.select()">' +
+    '<button class="btn btn-primary mt-4" onclick="navigator.clipboard.writeText(\'' + url + '\'); this.textContent=\'✓ Скопійовано\'">📋 Скопіювати посилання</button>' +
+    '<button class="btn btn-ghost mt-4" style="margin-left:8px" onclick="document.getElementById(\'modal\').style.display=\'none\'; refresh()">Закрити</button>';
+  refresh();
+};
+
+async function refresh() {
+  const { data: cands } = await sb.from('candidates').select('*').order('created_at', { ascending: false });
+  if (!cands || cands.length === 0) {
+    document.getElementById('list').innerHTML = '<div class="card text-center"><p class="muted">Поки немає кандидатів. Натисніть «+ Запросити кандидата».</p></div>';
+    return;
+  }
+  document.getElementById('list').innerHTML = '<div class="card" style="padding:0; overflow:hidden">' +
+    '<table style="width:100%; border-collapse:collapse; font-size:14px"><thead style="background:#f8fafc; border-bottom:1px solid var(--c-line)"><tr>' +
+    '<th style="text-align:left; padding:12px 16px">Імʼя</th><th style="text-align:left; padding:12px 16px">Посада</th><th style="text-align:left; padding:12px 16px">Статус</th><th style="text-align:left; padding:12px 16px">Посилання</th><th style="text-align:left; padding:12px 16px"></th>' +
+    '</tr></thead><tbody>' +
+    cands.map(c => {
+      const url = c.test_link_token ? (window.location.origin + '/test/?t=' + c.test_link_token) : '';
+      const statusColor = c.test_status === 'completed' ? 'var(--c-green)' : 'var(--c-muted)';
+      return '<tr style="border-top:1px solid var(--c-line)">' +
+        '<td style="padding:12px 16px; font-weight:600">' + esc(c.name) + '</td>' +
+        '<td style="padding:12px 16px; color:var(--c-muted)">' + esc(c.position || '—') + '</td>' +
+        '<td style="padding:12px 16px"><span style="color:' + statusColor + '">' + (c.test_status === 'completed' ? '✓ Завершено' : '⏳ Очікує') + '</span></td>' +
+        '<td style="padding:12px 16px">' + (url ? '<a href="' + url + '" target="_blank" style="font-size:12px">Відкрити</a>' : '—') + '</td>' +
+        '<td style="padding:12px 16px"><button class="btn btn-ghost" style="padding:5px 12px; font-size:12px" onclick="deleteCand(\'' + c.id + '\')">Видалити</button></td>' +
+      '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+
+async function deleteCand(id) {
+  if (!confirm('Видалити кандидата?')) return;
+  await sb.from('candidates').delete().eq('id', id);
+  refresh();
+}
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+(async () => { await requireAuth(); refresh(); })();
+</script>
+</body></html>

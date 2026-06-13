@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Підписка — HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item active">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar"><strong>Підписка</strong></div>
+    <div class="app-content">
+      <div class="card" style="max-width:600px" id="current"></div>
+      <h3 class="mt-6">Тарифи</h3>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:12px">
+        <div class="card">
+          <strong>FREE</strong>
+          <div style="font-size:32px; font-weight:700; margin:8px 0">0 ₴</div>
+          <div class="muted">2 тести на місяць</div>
+        </div>
+        <div class="card">
+          <strong style="color:var(--c-brand)">PRO</strong>
+          <div style="font-size:32px; font-weight:700; margin:8px 0">990 ₴ / міс</div>
+          <div class="muted">50 тестів, повна аналітика</div>
+          <button class="btn btn-primary btn-block mt-4" onclick="alert('Напишіть нам на info@hrconnect — активуємо вручну на 30 днів після оплати.')">Запросити PRO</button>
+        </div>
+        <div class="card">
+          <strong style="color:var(--c-accent)">ENTERPRISE</strong>
+          <div style="font-size:32px; font-weight:700; margin:8px 0">від 4900 ₴</div>
+          <div class="muted">Безлімітні тести, API, кастомізація</div>
+          <button class="btn btn-accent btn-block mt-4" onclick="alert('Напишіть на info@hrconnect — обговоримо умови.')">Звʼязатись</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>HRconnect</span>';
+(async () => {
+  await requireAuth();
+  const sub = await getMySubscription();
+  if (sub) {
+    const tierCls = 'tier-' + sub.tier;
+    document.getElementById('current').innerHTML =
+      '<strong>Поточний план</strong>' +
+      '<div style="display:flex; align-items:center; gap:14px; margin-top:10px"><span class="tier-badge ' + tierCls + '" style="font-size:14px; padding:6px 14px">' + sub.tier.toUpperCase() + '</span>' +
+      '<span class="muted">Тестів використано: ' + sub.tests_used_this_month + ' / ' + sub.tests_quota + '</span></div>' +
+      (sub.valid_until ? '<p class="muted mt-2">Діє до: ' + sub.valid_until + '</p>' : '');
+  }
+})();
+</script>
+</body></html>
