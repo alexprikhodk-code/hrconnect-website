@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Кабінет — HRconnect</title>
+<title>Кабінет — AI-HRconnect</title>
 <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body>
@@ -73,7 +73,7 @@
 <script src="/assets/js/supabase.js"></script>
 <script src="/assets/js/auth.js"></script>
 <script>
-document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>HRconnect</span>';
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
 (async () => {
   const user = await requireAuth();
   if (!user) return;
@@ -98,10 +98,11 @@ document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>HRconn
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = cands.map(c => {
       const vcolor = c.verdict === 'Перформер' ? 'var(--c-green)' : (c.verdict === 'Делатель' ? 'var(--c-red)' : 'var(--c-muted)');
+      const vlabel = c.verdict === 'Перформер' ? 'Продуктивний' : (c.verdict === 'Делатель' ? 'Виконавець' : '—');
       return `<tr style="border-top:1px solid var(--c-line)">
         <td style="padding:12px 16px; font-weight:600">${esc(c.name)}</td>
         <td style="padding:12px 16px; color:var(--c-muted)">${esc(c.position || '—')}</td>
-        <td style="padding:12px 16px"><span style="color:${vcolor}; font-weight:600">${esc(c.verdict || '—')}</span></td>
+        <td style="padding:12px 16px"><span style="color:${vcolor}; font-weight:600">${esc(vlabel)}</span></td>
         <td style="padding:12px 16px">${c.iq ?? '—'}</td>
         <td style="padding:12px 16px">${c.reproduction ?? '—'}</td>
         <td style="padding:12px 16px; color:var(--c-muted); font-size:13px">${new Date(c.created_at).toLocaleDateString('uk-UA')}</td>

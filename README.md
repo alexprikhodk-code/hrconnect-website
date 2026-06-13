@@ -1,4 +1,4 @@
-# HRconnect — SaaS платформа AI-тестування кандидатів
+# AI-HRconnect — SaaS платформа AI-тестування кандидатів
 
 Multi-tenant веб-застосунок: лендинг + кабінет користувача з ізольованими даними по підписці.
 
@@ -52,7 +52,7 @@ website/
 window.HRC_CONFIG = {
   SUPABASE_URL: "https://YOUR-PROJECT-REF.supabase.co",
   SUPABASE_ANON_KEY: "YOUR-ANON-PUBLIC-KEY",
-  SITE_NAME: "HRconnect"
+  SITE_NAME: "AI-HRconnect"
 };
 ```
 
@@ -71,7 +71,7 @@ python -m http.server 8000
    ```bash
    cd website
    git init && git branch -M main
-   git add . && git commit -m "Initial HRconnect website"
+   git add . && git commit -m "Initial AI-HRconnect website"
    git remote add origin https://github.com/alexprikhodk-code/hrconnect-website.git
    git push -u origin main
    ```
