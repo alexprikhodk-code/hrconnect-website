@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кандидат — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.cand-hero { display: grid; grid-template-columns: 1fr auto; gap: 20px; padding: 24px 28px; background: white; border-radius: 14px; box-shadow: var(--shadow-sm); margin-bottom: 18px; align-items: start; }
+.cand-hero h1 { font-size: 28px; margin: 0 0 4px; }
+.cand-hero .meta { color: var(--c-muted); font-size: 14px; }
+.cand-status { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; display: inline-block; margin-top: 8px; }
+.cand-status.completed { background: var(--c-green); color: var(--c-green-ink); }
+.cand-status.pending { background: var(--c-yellow); color: var(--c-yellow-ink); }
+.big-verdict { text-align: center; padding: 14px 22px; border-radius: 14px; min-width: 220px; }
+.big-verdict .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
+.big-verdict .val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+.big-verdict .conf { font-size: 12px; margin-top: 4px; opacity: 0.8; }
+.big-verdict.perf { background: var(--c-green); color: var(--c-green-ink); }
+.big-verdict.del  { background: var(--c-red); color: var(--c-red-ink); }
+.big-verdict.none { background: #f1f5f9; color: var(--c-muted); }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
+.kpi-card { background: white; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--c-line); }
+.kpi-card .lbl { font-size: 11px; color: var(--c-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-card .val { font-size: 22px; font-weight: 700; margin-top: 4px; }
+.kpi-card .desc { font-size: 13px; color: var(--c-muted); margin-top: 4px; }
+
+.section { background: white; border-radius: 14px; padding: 22px 26px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
+.section h2 { margin: 0 0 14px; font-size: 18px; }
+
+.point-row { display: grid; grid-template-columns: 28px 140px 1fr 80px 90px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--c-line); }
+.point-row:last-child { border-bottom: none; }
+.point-row .code { font-weight: 700; color: var(--c-brand); font-size: 16px; }
+.point-row .label { font-weight: 600; }
+.point-row .bar { height: 10px; background: #e2e8f0; border-radius: 999px; position: relative; overflow: hidden; }
+.point-row .bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.point-row .bar-fill.low { background: var(--c-red); }
+.point-row .bar-fill.mid { background: var(--c-yellow); }
+.point-row .bar-fill.high { background: var(--c-green); }
+.point-row .score { text-align: right; font-weight: 700; }
+.point-row .level-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-align: center; }
+.point-row .level-badge.Низький { background: var(--c-red); color: var(--c-red-ink); }
+.point-row .level-badge.Середній { background: var(--c-yellow); color: var(--c-yellow-ink); }
+.point-row .level-badge.Високий { background: var(--c-green); color: var(--c-green-ink); }
+
+.answer-row { padding: 12px 0; border-bottom: 1px solid var(--c-line); }
+.answer-row:last-child { border-bottom: none; }
+.answer-row .q { font-weight: 600; color: var(--c-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.answer-row .a { font-size: 14px; line-height: 1.55; white-space: pre-wrap; }
+
+.reasons-list { background: #f9fbfd; border-left: 3px solid var(--c-brand-2); padding: 12px 18px; border-radius: 8px; font-size: 13px; }
+.reasons-list ul { margin: 0; padding-left: 18px; }
+.reasons-list li { margin: 4px 0; line-height: 1.5; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--c-muted); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div><a href="/app/candidates.html" style="color:var(--c-muted)">← Усі кандидати</a></div>
+      <button class="btn btn-ghost" onclick="deleteCand()" style="color:var(--c-red); border-color:#fde0e0">Видалити кандидата</button>
+    </div>
+
+    <div class="app-content">
+      <div id="loader" class="empty-state">Завантаження...</div>
+      <div id="content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+const PRODUCTIVITY_LABELS = {
+  agrees_product: 'Згода з концепцією продукту посади',
+  explanation: 'Пояснення концепту',
+  is_working: 'Чи працює зараз',
+  position: 'Посада',
+  product: 'Особистий продукт (за словами кандидата)',
+  results: 'Опис результатів',
+  comparison: 'Порівняння з колегами',
+  plan_performance: 'Виконання плану',
+  achievements: 'Досягнення'
+};
+
+const TRAIT_DEFINITIONS = {
+  A: 'Стабільність — концентрація, порядок, дотримання планів',
+  B: 'Оптимізм — позитивний фокус, пошук рішень',
+  C: 'Самоволодіння — спокій під тиском',
+  D: 'Впевненість — передбачуваність, обдуманість рішень',
+  E: 'Активність — енергія, ініціатива, готовність до викликів',
+  F: 'Наполегливість — доведення справ до кінця',
+  G: "Відповідальність — здатність бути причиною результату",
+  H: "Правильність оцінки — об'єктивність, терпимість до інших точок зору",
+  I: 'Чуйність — готовність допомагати, довіра до людей',
+  J: 'Спілкування — легкість контакту, ясність мови'
+};
+
+const POINT_ORDER = ['A','B','C','D','E','F','G','H','I','J'];
+
+let candidateId = null;
+let candidateData = null;
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function bandColorCls(level) {
+  if (level === 'Низький') return 'low';
+  if (level === 'Середній') return 'mid';
+  if (level === 'Високий') return 'high';
+  return '';
+}
+
+function computeLocalVerdict(c) {
+  // Local heuristic: only if no AI verdict
+  if (c.verdict) return { verdict: c.verdict, label: c.verdict === 'Перформер' ? 'Продуктивний та ефективний' : (c.verdict === 'Делатель' ? 'Виконавець' : c.verdict), confidence: c.verdict_confidence || 'попередня', reasons: c.verdict_reasons || [] };
+
+  // Heuristic from raw_answers
+  const a = c.raw_answers || {};
+  let score = 0; const reasons = [];
+  const agrees = (a.agrees_product || '').toLowerCase();
+  if (agrees.includes('так, абсолютно')) { score += 2; reasons.push('Безумовно погоджується, що кожна посада має продукт'); }
+  else if (agrees.startsWith('швидше так') || agrees.startsWith('так')) { score += 1; reasons.push('Погоджується з концепцією продукту посади'); }
+  else if (agrees.startsWith('ні') || agrees.startsWith('швидше ні')) { score -= 1; reasons.push('Не погоджується з концепцією продукту посади'); }
+
+  const product = (a.product || '').toLowerCase();
+  const thingPatterns = /(угод|обід|обед|клиент|клієнт|звіт|отчет|прибут|виручк|продаж|подача|меню|страв|обслугов|сервіс|товар|консультац|угод)/;
+  const procPatterns = /(комуник|коммуник|управл|керую|спілкуван|обов'язк|обязанн|процес|процесс)/;
+  if (thingPatterns.test(product)) { score += 2; reasons.push('Продукт описаний як конкретний результат'); }
+  else if (procPatterns.test(product) && !thingPatterns.test(product)) { score -= 1; reasons.push('Продукт описаний як процес, а не результат'); }
+  else if (product.length > 15) { score += 1; reasons.push('Опис продукту присутній'); }
+
+  const res = ((a.results || '') + ' ' + (a.achievements || '')).toLowerCase();
+  const hasNumbers = /\d{2,}/.test(res);
+  if (hasNumbers && /(збільш|увелич|зріс|вирос|оптиміз|оптимиз|прибут)/.test(res)) { score += 2; reasons.push('Конкретні цифрові досягнення'); }
+  else if (hasNumbers) { score += 1; reasons.push('Є кількісні дані у відповідях'); }
+  else if (res.trim().length < 40) { score -= 1; reasons.push('Результати описані абстрактно'); }
+
+  const comp = (a.comparison || '').toLowerCase();
+  if (comp.includes('значно вищ') || comp.includes('дещо вищ')) { score += 1; reasons.push('Оцінює свої результати вище за колег'); }
+  else if (comp.includes('нижч')) { score -= 1; reasons.push('Оцінює свої результати нижче за колег'); }
+
+  const plan = (a.plan_performance || '').toLowerCase();
+  if (plan.startsWith('перевик')) { score += 1; reasons.push('Заявляє про перевиконання плану'); }
+  else if (plan.startsWith('не завжди') || plan.startsWith('часто не')) { score -= 1; reasons.push('Часто не виконує план'); }
+
+  let verdict, label, confidence;
+  if (score >= 5) { verdict = 'Перформер'; label = 'Продуктивний та ефективний'; confidence = 'висока'; }
+  else if (score >= 2) { verdict = 'Перформер'; label = 'Продуктивний та ефективний'; confidence = 'помірна'; }
+  else if (score >= 0) { verdict = 'Делатель'; label = 'Виконавець'; confidence = 'помірна'; }
+  else { verdict = 'Делатель'; label = 'Виконавець'; confidence = 'висока'; }
+  return { verdict, label, confidence, reasons, score };
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  candidateId = params.get('id');
+  if (!candidateId) {
+    document.getElementById('loader').innerHTML = 'Не вказано id кандидата.<br><a href="/app/candidates.html">← Назад</a>';
+    return;
+  }
+  const user = await requireAuth();
+  if (!user) return;
+
+  const { data, error } = await sb.from('candidates').select('*').eq('id', candidateId).maybeSingle();
+  if (error || !data) {
+    document.getElementById('loader').innerHTML = 'Кандидата не знайдено.<br><a href="/app/candidates.html">← Назад</a>';
+    return;
+  }
+  candidateData = data;
+  render(data);
+}
+
+function render(c) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const v = computeLocalVerdict(c);
+  const vcls = v.verdict === 'Перформер' ? 'perf' : (v.verdict === 'Делатель' ? 'del' : 'none');
+  const statusCls = c.test_status === 'completed' ? 'completed' : 'pending';
+  const statusTxt = c.test_status === 'completed' ? '✓ Тест завершено' : '⏳ Очікує на проходження';
+
+  // Hero
+  let html = `
+    <div class="cand-hero">
+      <div>
+        <h1>${esc(c.name)}</h1>
+        <div class="meta">${esc(c.position || 'Посада не вказана')}${c.email ? ' · ' + esc(c.email) : ''}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
+        <span class="cand-status ${statusCls}">${statusTxt}</span>
+        ${c.test_completed_at ? `<span style="color:var(--c-muted); font-size:12px; margin-left:10px">${new Date(c.test_completed_at).toLocaleString('uk-UA')}</span>` : ''}
+      </div>
+      <div class="big-verdict ${vcls}">
+        <div class="lbl">Вердикт</div>
+        <div class="val">${esc(v.label)}</div>
+        <div class="conf">впевненість: ${esc(v.confidence)}</div>
+      </div>
+    </div>
+  `;
+
+  // If test not yet completed — show invite link
+  if (c.test_status !== 'completed') {
+    const url = window.location.origin + '/test/?t=' + (c.test_link_token || '');
+    html += `
+      <div class="section">
+        <h2>Чекаємо на проходження тесту</h2>
+        <p>Надішліть кандидату це посилання у месенджер:</p>
+        <input type="text" readonly value="${esc(url)}" class="form-input" onclick="this.select()">
+        <div style="display:flex; gap:10px; margin-top:12px">
+          <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${esc(url)}'); this.textContent='✓ Скопійовано'">📋 Скопіювати</button>
+          <a class="btn btn-ghost" href="${esc(url)}" target="_blank">👁 Переглянути сторінку тесту</a>
+        </div>
+      </div>
+    `;
+  } else {
+    // KPI cards
+    html += `
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="lbl">IQ</div>
+          <div class="val">${c.iq != null ? c.iq : '—'}</div>
+          <div class="desc">${esc(c.iq_band || 'не виміряно')}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="lbl">Здатність відтворення</div>
+          <div class="val">${c.reproduction != null ? c.reproduction : '—'}</div>
+          <div class="desc">${esc(c.reproduction_band || 'не виміряно')}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="lbl">Особистий продукт (за словами)</div>
+          <div class="val" style="font-size:14px; font-weight:500; line-height:1.4; margin-top:6px">${esc((c.product_self || '—').slice(0, 90))}${c.product_self && c.product_self.length > 90 ? '…' : ''}</div>
+        </div>
+      </div>
+    `;
+
+    // Verdict reasoning
+    if (v.reasons && v.reasons.length) {
+      html += `<div class="section">
+        <h2>Обґрунтування вердикту</h2>
+        <div class="reasons-list"><ul>${v.reasons.map(r => '<li>' + esc(r) + '</li>').join('')}</ul></div>
+        <p style="color:var(--c-muted); font-size:13px; margin-top:14px">Базовий аналіз. У PRO-плані буде глибокий AI-розбір через OpenAI.</p>
+      </div>`;
+    }
+
+    // Points A-J
+    if (c.points && Object.keys(c.points).length) {
+      html += `<div class="section">
+        <h2>Особистісні риси — 10 точок</h2>`;
+      POINT_ORDER.forEach(code => {
+        const p = c.points[code];
+        if (!p) return;
+        const score = p.score != null ? p.score : 0;
+        const level = p.level || (score <= -19 ? 'Низький' : (score < 32 ? 'Середній' : 'Високий'));
+        const barCls = bandColorCls(level);
+        // Position bar: map -100..100 → 0..100% width with center indicator
+        const widthPct = Math.min(100, Math.abs(score) / 100 * 50);
+        const leftPct = score < 0 ? (50 - widthPct) : 50;
+        html += `<div class="point-row">
+          <span class="code">${code}</span>
+          <span class="label">${esc(p.label || code)}<br><span style="font-size:11px; color:var(--c-muted); font-weight:400">${esc(TRAIT_DEFINITIONS[code] || '')}</span></span>
+          <div class="bar">
+            <div style="position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--c-line)"></div>
+            <div class="bar-fill ${barCls}" style="left:${leftPct}%; width:${widthPct}%"></div>
+          </div>
+          <span class="score">${score}</span>
+          <span class="level-badge ${level}">${level}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Productivity answers
+    if (c.raw_answers && Object.keys(c.raw_answers).length) {
+      html += `<div class="section">
+        <h2>Відповіді кандидата на блок продуктивності</h2>`;
+      Object.keys(PRODUCTIVITY_LABELS).forEach(k => {
+        const v = c.raw_answers[k];
+        if (!v) return;
+        html += `<div class="answer-row">
+          <div class="q">${PRODUCTIVITY_LABELS[k]}</div>
+          <div class="a">${esc(v)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+window.deleteCand = async function () {
+  if (!confirm('Видалити кандидата «' + (candidateData?.name || '') + '» назавжди?')) return;
+  await sb.from('candidates').delete().eq('id', candidateId);
+  window.location.href = '/app/candidates.html';
+};
+
+load();
+</script>
+</body></html>

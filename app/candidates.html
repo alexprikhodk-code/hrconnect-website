@@ -113,7 +113,7 @@ async function refresh() {
       const url = c.test_link_token ? (window.location.origin + '/test/?t=' + c.test_link_token) : '';
       const statusColor = c.test_status === 'completed' ? 'var(--c-green)' : 'var(--c-muted)';
       return '<tr style="border-top:1px solid var(--c-line)">' +
-        '<td style="padding:12px 16px; font-weight:600">' + esc(c.name) + '</td>' +
+        '<td style="padding:12px 16px; font-weight:600"><a href="/app/candidate.html?id=' + c.id + '" style="color:var(--c-brand)">' + esc(c.name) + '</a></td>' +
         '<td style="padding:12px 16px; color:var(--c-muted)">' + esc(c.position || '—') + '</td>' +
         '<td style="padding:12px 16px"><span style="color:' + statusColor + '">' + (c.test_status === 'completed' ? '✓ Завершено' : '⏳ Очікує') + '</span></td>' +
         '<td style="padding:12px 16px">' + (url ? '<a href="' + url + '" target="_blank" style="font-size:12px">Відкрити</a>' : '—') + '</td>' +
