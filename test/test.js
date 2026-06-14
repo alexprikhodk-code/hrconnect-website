@@ -190,9 +190,19 @@
     Object.keys(TRAIT_LABELS).forEach(t => { points[t] = { label: TRAIT_LABELS[t], score: 0, level: '', thesis: '', full: '' }; });
     PERSONALITY_QUESTIONS.forEach(q => {
       const yes = persAnswers[q.key] === 'yes';
-      // direction +1: yes adds +50; direction -1: yes subtracts 50
-      const delta = yes ? (q.direction * 50) : -(q.direction * 25);
+      // direction +1 (positive trait statement): Yes=+35, No=-10
+      // direction -1 (negative trait statement): Yes=-35, No=+10
+      let delta;
+      if (q.direction > 0) delta = yes ? 35 : -10;
+      else delta = yes ? -35 : 10;
       points[q.trait].score += delta;
+      points[q.trait].agree_count = (points[q.trait].agree_count || 0) + (yes ? 1 : 0);
+    });
+    // Track ambiguity: if both yes or both no on same trait → flag
+    Object.keys(points).forEach(t => {
+      const traitQs = PERSONALITY_QUESTIONS.filter(q => q.trait === t);
+      const yesCount = traitQs.filter(q => persAnswers[q.key] === 'yes').length;
+      points[t].ambiguous = (yesCount === 0 || yesCount === traitQs.length);
     });
     // Clamp -100..100 and assign level
     Object.keys(points).forEach(t => {

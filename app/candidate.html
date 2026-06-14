@@ -43,6 +43,21 @@
 .point-row .level-badge.Низький { background: var(--c-red); color: var(--c-red-ink); }
 .point-row .level-badge.Середній { background: var(--c-yellow); color: var(--c-yellow-ink); }
 .point-row .level-badge.Високий { background: var(--c-green); color: var(--c-green-ink); }
+.point-row .level-badge.ambiguous { background: #f1f5f9; color: var(--c-muted); }
+.point-conclusion { padding: 8px 0 14px 168px; color: #475569; font-size: 13px; line-height: 1.5; border-bottom: 1px solid var(--c-line); }
+.point-row + .point-conclusion { border-bottom: 1px solid var(--c-line); margin-top: -1px; }
+.point-row { border-bottom: none !important; padding-bottom: 6px !important; }
+
+.hire-rec { padding: 18px 22px; border-radius: 12px; margin-bottom: 18px; display: flex; gap: 16px; align-items: start; }
+.hire-rec.green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #6ee7b7; }
+.hire-rec.amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fbbf24; }
+.hire-rec.red { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5; }
+.hire-rec .icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+.hire-rec .title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.hire-rec .desc { font-size: 14px; line-height: 1.5; }
+.risk-tag, .strength-tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; margin: 4px 4px 4px 0; }
+.risk-tag { background: #fee2e2; color: #991b1b; }
+.strength-tag { background: #dcfce7; color: #166534; }
 
 .answer-row { padding: 12px 0; border-bottom: 1px solid var(--c-line); }
 .answer-row:last-child { border-bottom: none; }
@@ -170,6 +185,139 @@ function computeLocalVerdict(c) {
   return { verdict, label, confidence, reasons, score };
 }
 
+
+// ==== Point conclusions (per trait per level) — original AI-HRconnect descriptions ====
+const POINT_CONCLUSIONS = {
+  A: { // Стабільність
+    "Високий": "Чітко планує і доводить розпочате до кінця. Підходить на ролі з повторюваною дисципліною: операційні, фінансові, контрольні. Може бути компульсивним перфекціоністом.",
+    "Середній": "У звичайних умовах організована, але під тиском може втрачати фокус. Потребує середовища з помірним темпом і чіткими пріоритетами.",
+    "Низький": "Складно тримати увагу і дотримуватися планів. Часті переключення між задачами. Ризикова на ролях, що потребують методичності.",
+    "Невизначено": "Відповіді на питання про планування суперечливі — потрібна особиста співбесіда для уточнення."
+  },
+  B: { // Оптимізм
+    "Високий": "Бачить рішення там, де інші бачать проблеми. Швидко відновлюється після невдач. Цінна для команд, які працюють в умовах невизначеності.",
+    "Середній": "Емоційний фон помірний, залежить від подій. Може як підтримати команду, так і занурити її в тривогу.",
+    "Низький": "Песимістичний фон, увага зміщена на проблеми. В керівній ролі ризикує «отруїти» команду. Потребує сильного позитивного середовища.",
+    "Невизначено": "Не вдається визначити емоційний фон з відповідей — потрібен довший контакт."
+  },
+  C: { // Самоволодіння
+    "Високий": "Зберігає холоднокровність навіть під сильним тиском. Підходить на ролі з частими стресовими ситуаціями: переговори, кризовий менеджмент.",
+    "Середній": "У повсякденних ситуаціях врівноважена, у критичних може дратуватися або уникати дій.",
+    "Низький": "Слабкий емоційний контроль. У стресових ситуаціях можливі вибухи або вихід зі стану. Не рекомендована на стресові ролі.",
+    "Невизначено": "Відповіді про реакцію на стрес неоднозначні."
+  },
+  D: { // Впевненість
+    "Високий": "Послідовна, передбачувана, обдумує рішення. Цінна для довгострокових проектів. Інколи може здаватися повільною на старті.",
+    "Середній": "Більшість дій передбачувані, але інколи спрацьовують імпульси. Потребує чітких рамок у нових сферах.",
+    "Низький": "Поведінка непередбачувана, рішення часто імпульсивні. Складно довірити складну послідовну роботу.",
+    "Невизначено": "Не вдається оцінити стійкість поведінки з наявних відповідей."
+  },
+  E: { // Активність
+    "Високий": "Висока енергія та ініціатива. Береться за нові виклики. У надмірі може брати більше, ніж завершує.",
+    "Середній": "Активність нерівномірна — періоди підйому змінюються паузами. Потребує зовнішнього імпульсу для запуску.",
+    "Низький": "Низький рівень енергії. Швидко втомлюється, уникає нових викликів. Підходить лише на ролі зі сталим спокійним ритмом.",
+    "Невизначено": "Сигнали про рівень енергії суперечливі."
+  },
+  F: { // Наполегливість
+    "Високий": "Доводить справи до кінця, не уникає прямих розмов. У надмірі — може тиснути на оточення.",
+    "Середній": "У звичних задачах доводить до результату, у складних — може опускати руки.",
+    "Низький": "Слабка наполегливість. Часто кидає справи на півдорозі. Потребує жорсткого зовнішнього контролю.",
+    "Невизначено": "Відповіді про доведення справ до кінця неоднозначні."
+  },
+  G: { // Відповідальність
+    "Високий": "Активно бере відповідальність за результат. Бачить себе причиною змін. Сильна сторона для керівних ролей.",
+    "Середній": "У зоні комфорту відповідальна, але уникає ситуацій, де може бути причиною помилки.",
+    "Низький": "Відповідальність бере неохоче. Пояснює невдачі обставинами. Не підходить на самокеровані ролі — потребує постійного нагляду.",
+    "Невизначено": "Не вдається встановити рівень причинності за відповідями."
+  },
+  H: { // Правильність оцінки
+    "Високий": "Об'єктивно оцінює людей і ситуації, відкрита до точок зору, які відрізняються від її власної.",
+    "Середній": "У спокої справедлива, під тиском може ставати критичною та менш гнучкою.",
+    "Низький": "Схильна до різких та інколи несправедливих оцінок. Конфліктна. Ризик для роботи в команді.",
+    "Невизначено": "Сигнали щодо терпимості до іншої точки зору суперечливі."
+  },
+  I: { // Чуйність
+    "Високий": "Відкрита, доброзичлива, легко вибудовує довіру. У надмірі — ризик довіряти не тим людям.",
+    "Середній": "До близьких — уважна, до нових людей тримається на дистанції. Природна обережність.",
+    "Низький": "Тримає інших на дистанції, складно довіряє. Суворий стиль управління без емпатії. Складно для ролей сервісу.",
+    "Невизначено": "Не вдається оцінити рівень емпатії."
+  },
+  J: { // Спілкування
+    "Високий": "Жваве, ясне спілкування, легко ініціює контакт. Цінна на ролях з постійним клієнтським контактом.",
+    "Середній": "Базова комунікація прийнятна. У великих або незнайомих групах може бути стриманою.",
+    "Низький": "Спілкується мало і скуто. Створює дистанцію в команді. Не підходить на ролі продажу/сервісу/керівництва.",
+    "Невизначено": "Відповіді про комунікативні звички неоднозначні."
+  }
+};
+
+function pointConclusion(code, level, ambiguous) {
+  if (ambiguous) return POINT_CONCLUSIONS[code]?.["Невизначено"] || "—";
+  return POINT_CONCLUSIONS[code]?.[level] || "—";
+}
+
+// ==== Hire recommendation logic ====
+function computeHireRecommendation(c, verdict) {
+  const points = c.points || {};
+  const risks = [];
+  const strengths = [];
+
+  const get = (code) => points[code] ? (points[code].score || 0) : null;
+  const lvl = (code) => points[code] ? points[code].level : null;
+
+  // Strong red flags
+  if (lvl('B') === 'Низький') risks.push('низький Оптимізм (B) — фокус на проблемах може ускладнити роботу в команді');
+  if (lvl('G') === 'Низький') risks.push('низька Відповідальність (G) — не бере причинність, потребуватиме постійного контролю');
+  if (lvl('H') === 'Низький') risks.push('низька Правильність оцінки (H) — ризик конфліктів через зайву критичність');
+  if (lvl('C') === 'Низький') risks.push('низьке Самоволодіння (C) — нестабільна реакція на тиск');
+  if (lvl('F') === 'Низький') risks.push('низька Наполегливість (F) — ризик кидати справи на півдорозі');
+  if (c.iq != null && c.iq < 90) risks.push('IQ ' + c.iq + ' — нижче середнього, обмежує керівні ролі');
+  if (c.reproduction != null && c.reproduction < 65) risks.push('Здатність відтворення ' + c.reproduction + ' — нижче порогу для керівних ролей');
+
+  // Strengths
+  if (lvl('A') === 'Високий') strengths.push('висока Стабільність — дисципліна і фокус');
+  if (lvl('B') === 'Високий') strengths.push('високий Оптимізм — енергетично заряджає команду');
+  if (lvl('G') === 'Високий') strengths.push('висока Відповідальність — бере результат на себе');
+  if (lvl('F') === 'Високий') strengths.push('висока Наполегливість — доводить справи до кінця');
+  if (lvl('E') === 'Високий') strengths.push('висока Активність — ініціативна, готова до викликів');
+  if (verdict.verdict === 'Перформер') strengths.push('бачить продукт посади і має конкретні досягнення');
+
+  // Decision matrix
+  let recommendation, recColor, recIcon, recReason;
+  const isPerf = verdict.verdict === 'Перформер';
+  const isHighConf = verdict.confidence === 'висока';
+  const critRisks = risks.length;
+
+  if (isPerf && isHighConf && critRisks <= 1) {
+    recommendation = 'Рекомендовано до найму';
+    recColor = 'var(--c-green-ink)';
+    recIcon = '✓';
+    recReason = 'Сильний профіль продуктивності + збалансовані особистісні риси.';
+  } else if (isPerf && critRisks <= 2) {
+    recommendation = 'Рекомендовано з застереженнями';
+    recColor = '#92400e';
+    recIcon = '⚠';
+    recReason = 'Продуктивний кандидат, але є ' + critRisks + ' ризик(и), що варто врахувати.';
+  } else if (isPerf && critRisks >= 3) {
+    recommendation = 'Розглядати тільки на виконавчу позицію';
+    recColor = '#92400e';
+    recIcon = '⚠';
+    recReason = 'Розуміє продукт, але кількість червоних прапорів (' + critRisks + ') не дозволяє рекомендувати на керівну роль.';
+  } else if (!isPerf && critRisks <= 1) {
+    recommendation = 'Розглядати на виконавчу роль з наглядом';
+    recColor = '#92400e';
+    recIcon = '⚠';
+    recReason = 'Не показує ознак Продуктивного, але профіль особистості прийнятний.';
+  } else {
+    recommendation = 'НЕ рекомендовано до найму';
+    recColor = 'var(--c-red-ink)';
+    recIcon = '✗';
+    recReason = 'Поєднання ' + (isPerf ? '' : 'Виконавця ') + (critRisks ? 'і ' + critRisks + ' ризик(ів) ' : '') + 'робить кандидата високоризиковим.';
+  }
+
+  return { recommendation, recColor, recIcon, recReason, risks, strengths };
+}
+
+
 async function load() {
   const params = new URLSearchParams(window.location.search);
   candidateId = params.get('id');
@@ -250,12 +398,26 @@ function render(c) {
       </div>
     `;
 
+    // Hire recommendation
+    const hire = computeHireRecommendation(c, v);
+    const hireCls = hire.recommendation.includes('НЕ рекомендовано') || hire.recommendation.includes('тільки на виконавчу') ? 'red' :
+                    hire.recommendation.includes('Рекомендовано до найму') ? 'green' : 'amber';
+    html += `<div class="hire-rec ${hireCls}">
+      <div class="icon">${hire.recIcon}</div>
+      <div style="flex:1">
+        <div class="title" style="color:${hire.recColor}">${esc(hire.recommendation)}</div>
+        <div class="desc">${esc(hire.recReason)}</div>
+        ${hire.strengths.length ? '<div style="margin-top:10px"><strong style="font-size:12px; color:#166534">Сильні сторони:</strong><br>' + hire.strengths.map(s => '<span class="strength-tag">+ ' + esc(s) + '</span>').join('') + '</div>' : ''}
+        ${hire.risks.length ? '<div style="margin-top:8px"><strong style="font-size:12px; color:#991b1b">Ризики:</strong><br>' + hire.risks.map(r => '<span class="risk-tag">! ' + esc(r) + '</span>').join('') + '</div>' : ''}
+      </div>
+    </div>`;
+
     // Verdict reasoning
     if (v.reasons && v.reasons.length) {
       html += `<div class="section">
-        <h2>Обґрунтування вердикту</h2>
+        <h2>Обґрунтування вердикту по продуктивності</h2>
         <div class="reasons-list"><ul>${v.reasons.map(r => '<li>' + esc(r) + '</li>').join('')}</ul></div>
-        <p style="color:var(--c-muted); font-size:13px; margin-top:14px">Базовий аналіз. У PRO-плані буде глибокий AI-розбір через OpenAI.</p>
+        <p style="color:var(--c-muted); font-size:13px; margin-top:14px">Базовий локальний аналіз. У наступному релізі — поглиблений AI-розбір через OpenAI з цитатами з відповідей.</p>
       </div>`;
     }
 
@@ -269,19 +431,24 @@ function render(c) {
         const score = p.score != null ? p.score : 0;
         const level = p.level || (score <= -19 ? 'Низький' : (score < 32 ? 'Середній' : 'Високий'));
         const barCls = bandColorCls(level);
-        // Position bar: map -100..100 → 0..100% width with center indicator
-        const widthPct = Math.min(100, Math.abs(score) / 100 * 50);
+        const ambiguous = p.ambiguous === true;
+        // Position bar: map -100..100 → percentage width
+        const widthPct = Math.max(3, Math.min(100, Math.abs(score) / 100 * 50));
         const leftPct = score < 0 ? (50 - widthPct) : 50;
+        const conclusion = pointConclusion(code, level, ambiguous);
+        const displayLevel = ambiguous ? 'Невизначено' : level;
+        const displayCls = ambiguous ? 'ambiguous' : level;
         html += `<div class="point-row">
           <span class="code">${code}</span>
           <span class="label">${esc(p.label || code)}<br><span style="font-size:11px; color:var(--c-muted); font-weight:400">${esc(TRAIT_DEFINITIONS[code] || '')}</span></span>
           <div class="bar">
-            <div style="position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--c-line)"></div>
+            <div style="position:absolute; left:50%; top:-3px; bottom:-3px; width:2px; background:var(--c-muted); opacity:0.4"></div>
             <div class="bar-fill ${barCls}" style="left:${leftPct}%; width:${widthPct}%"></div>
           </div>
           <span class="score">${score}</span>
-          <span class="level-badge ${level}">${level}</span>
-        </div>`;
+          <span class="level-badge ${displayCls}">${displayLevel}</span>
+        </div>
+        <div class="point-conclusion">${esc(conclusion)}</div>`;
       });
       html += `</div>`;
     }
