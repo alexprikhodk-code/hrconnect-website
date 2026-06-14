@@ -39,13 +39,13 @@
 .dots-row { display: flex; gap: 5px; }
 .dot { width: 22px; height: 8px; border-radius: 999px; background: #e2e8f0; transition: background .15s; }
 .dot.empty { background: #e2e8f0; }
-.dot.red { background: var(--c-red); }
-.dot.amber { background: #f59e0b; }
-.dot.green { background: var(--c-green); }
-.level-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-align: center; display: inline-block; flex-shrink: 0; }
-.level-badge.Низький { background: var(--c-red); color: var(--c-red-ink); }
-.level-badge.Середній { background: var(--c-yellow); color: var(--c-yellow-ink); }
-.level-badge.Високий { background: var(--c-green); color: var(--c-green-ink); }
+.dot.red { background: #ef4444; }       /* red */
+.dot.yellow { background: #eab308; }    /* yellow */
+.dot.green { background: #22c55e; }     /* green */
+.level-badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-align: center; display: inline-block; flex-shrink: 0; letter-spacing: 0.02em; }
+.level-badge.Низький { background: #fee2e2; color: #b91c1c; }
+.level-badge.Середній { background: #fef3c7; color: #b45309; }
+.level-badge.Високий { background: #dcfce7; color: #166534; }
 .level-badge.ambiguous { background: #f1f5f9; color: var(--c-muted); }
 
 .hire-rec { padding: 18px 22px; border-radius: 12px; margin-bottom: 18px; display: flex; gap: 16px; align-items: start; }
@@ -467,7 +467,7 @@ function render(c) {
         const dots = [];
         for (let k = 1; k <= 10; k++) {
           const filled = k <= t.score10;
-          const colorCls = !filled ? 'empty' : (t.score10 <= 3 ? 'red' : (t.score10 <= 6 ? 'amber' : 'green'));
+          const colorCls = !filled ? 'empty' : (t.score10 <= 3 ? 'red' : (t.score10 <= 6 ? 'yellow' : 'green'));
           dots.push(`<span class="dot ${colorCls}"></span>`);
         }
         html += `<div class="trait-card">
