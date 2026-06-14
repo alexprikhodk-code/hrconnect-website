@@ -45,6 +45,27 @@
 .cost-desc { font-size: 14px; color: #475569; line-height: 1.5; margin-top: auto; }
 @media (max-width: 1000px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .cost-grid { grid-template-columns: 1fr; } .cost-section h2 { font-size: 28px; } }
+
+.tests-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.test-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 2px 12px rgba(15,30,50,0.05); cursor: pointer; transition: all .2s; border: 1px solid transparent; }
+.test-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(15,30,50,0.12); border-color: var(--c-brand); }
+.test-card h3 { font-size: 17px; margin: 12px 0 6px; }
+.test-card p { font-size: 13.5px; line-height: 1.5; margin: 0 0 12px; }
+.test-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.test-meta { font-size: 11.5px; color: var(--c-muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--c-line); }
+@media (max-width: 900px) { .tests-grid { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 560px) { .tests-grid { grid-template-columns: 1fr; } }
+
+.test-modal { display: none; position: fixed; inset: 0; background: rgba(15,30,50,0.55); z-index: 9990; align-items: center; justify-content: center; padding: 20px; }
+.test-modal.open { display: flex; }
+.test-modal-inner { background: white; border-radius: 16px; max-width: 640px; width: 100%; max-height: 90vh; overflow: auto; padding: 36px 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; }
+.test-modal-close { position: absolute; top: 14px; right: 18px; background: none; border: none; font-size: 28px; color: var(--c-muted); cursor: pointer; line-height: 1; padding: 4px 8px; }
+.test-modal-close:hover { color: var(--c-ink); }
+.test-modal h2 { font-size: 22px; margin: 0 0 6px; display: flex; align-items: center; gap: 12px; }
+.test-modal .test-modal-meta { color: var(--c-muted); font-size: 13px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--c-line); }
+.test-modal h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--c-brand); margin: 18px 0 6px; }
+.test-modal p, .test-modal li { font-size: 14px; line-height: 1.6; color: #334155; }
+.test-modal ul { padding-left: 20px; margin: 8px 0; }
 </style>
 <script type="application/ld+json">
 {
@@ -291,23 +312,55 @@
 
 <section id="tests" style="padding:80px 0; background:#f8fafc">
   <div class="container">
-    <h2 class="text-center">Що оцінюємо</h2>
-    <p class="text-center muted" style="max-width:600px; margin:10px auto 40px">Чотири виміри, що дають повну картину кандидата ще до співбесіди.</p>
-    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:32px; align-items:center">
-      <div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
-          <div class="card"><strong>Продуктивність</strong><p class="muted" style="margin-top:6px; font-size:14px">Чи бачить людина свій продукт — кінцевий результат роботи</p></div>
-          <div class="card"><strong>10 точок особистості</strong><p class="muted" style="margin-top:6px; font-size:14px">Стабільність, активність, відповідальність та інші</p></div>
-          <div class="card"><strong>IQ</strong><p class="muted" style="margin-top:6px; font-size:14px">Когнітивний рівень, придатність до керівних ролей</p></div>
-          <div class="card"><strong>Здатність відтворення</strong><p class="muted" style="margin-top:6px; font-size:14px">Здатність точно виконувати інструкції</p></div>
-        </div>
+    <h2 class="text-center">Що оцінюємо · 6 методик</h2>
+    <p class="text-center muted" style="max-width:680px; margin:10px auto 40px">Шість тестів, що дають повну картину кандидата ще до співбесіди. Натисніть на картку, щоб дізнатися деталі.</p>
+    <div class="tests-grid">
+      <div class="test-card" data-test="productivity">
+        <div class="test-icon" style="background:#dbeafe">📋</div>
+        <h3>Тест на продуктивність</h3>
+        <p class="muted">Чи бачить людина продукт своєї посади та чи має конкретні результати</p>
+        <div class="test-meta">⏱ 15-20 хв · 13 питань + 20 yes/no</div>
       </div>
-      <div>
-        <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=900&q=80" alt="Команда працює" style="width:100%; border-radius:14px; box-shadow:0 12px 40px rgba(15,30,50,0.12)">
+      <div class="test-card" data-test="enneagram">
+        <div class="test-icon" style="background:#ede9fe">🌀</div>
+        <h3>Еннеаграма</h3>
+        <p class="muted">9 типів особистості — що внутрішньо рухає кандидатом</p>
+        <div class="test-meta">⏱ 10 хв · 45 тверджень</div>
+      </div>
+      <div class="test-card" data-test="disc">
+        <div class="test-icon" style="background:#fee2e2">📊</div>
+        <h3>DISC</h3>
+        <p class="muted">Стиль робочої поведінки (Dominance / Influence / Steadiness / Conscientiousness)</p>
+        <div class="test-meta">⏱ 7-10 хв · 24 твердження</div>
+      </div>
+      <div class="test-card" data-test="bigfive">
+        <div class="test-icon" style="background:#ddd6fe">🌌</div>
+        <h3>Big Five (OCEAN)</h3>
+        <p class="muted">5 наукових вимірів — найбільш валідована академічна модель</p>
+        <div class="test-meta">⏱ 8-12 хв · 30 тверджень</div>
+      </div>
+      <div class="test-card" data-test="iq">
+        <div class="test-icon" style="background:#fef3c7">🧠</div>
+        <h3>IQ — когнітивні здібності</h3>
+        <p class="muted">Логіка, лічба, аналогії, числові послідовності — з таймером</p>
+        <div class="test-meta">⏱ 15 хв · 15 завдань · обмеження часу</div>
+      </div>
+      <div class="test-card" data-test="reproduction">
+        <div class="test-icon" style="background:#dcfce7">👁️</div>
+        <h3>Здатність відтворення</h3>
+        <p class="muted">Точність сприйняття та повторення інструкцій — критично для багатьох ролей</p>
+        <div class="test-meta">⏱ 5 хв · 10 завдань</div>
       </div>
     </div>
   </div>
 </section>
+
+<div id="testModal" class="test-modal" onclick="if(event.target===this)closeTestModal()">
+  <div class="test-modal-inner">
+    <button class="test-modal-close" onclick="closeTestModal()">×</button>
+    <div id="testModalBody"></div>
+  </div>
+</div>
 
 <section id="pricing" style="padding:80px 0">
   <div class="container">
@@ -404,6 +457,98 @@
 const brandHTML = '<span style="display:inline-flex; align-items:center; vertical-align:middle">' + brandLogoSvg(34) + '</span><span style="margin-left:10px">AI-HRconnect</span>';
 document.getElementById('navLogo').innerHTML = brandHTML;
 document.getElementById('footerLogo').innerHTML = brandHTML;
+</script>
+
+<script>
+const TEST_DETAILS = {
+  productivity: {
+    icon: "📋", color: "#1f4e78",
+    title: "Тест на продуктивність",
+    meta: "15-20 хвилин · 13 відкритих питань + 20 yes/no тверджень",
+    sections: [
+      ["Що вимірює", "<p>Найвичерпніший тест системи. Розкладає кандидата на дві площини: (1) розуміння власного <strong>продукту посади</strong> і наявність <strong>конкретних результатів</strong>, (2) 10 рис особистості, що впливають на роботу.</p>"],
+      ["Що відбувається у тесті", "<ul><li>Кандидат відповідає на питання про концепцію «продукту посади» та чому з нею погоджується/не погоджується</li><li>Описує свою поточну/останню посаду та власний особистий «продукт» — те, що він виробляє для компанії</li><li>Наводить конкретні результати з цифрами (виторг, % клієнтів, обсяг виробництва тощо)</li><li>Порівнює себе з колегами на аналогічних позиціях</li><li>Заявляє про виконання/невиконання плану</li><li>Перераховує 2-3 досягнення, якими пишається</li><li>Відповідає на 20 yes/no тверджень, що вимірюють 10 рис: <strong>Стабільність, Оптимізм, Самоволодіння, Впевненість, Енергія, Наполегливість, Відповідальність, Правильність оцінки, Чуйність, Спілкування</strong></li></ul>"],
+      ["Що отримує HR", "<ul><li><strong>Вердикт:</strong> «Продуктивний та ефективний» або «Виконавець» з впевненістю (висока/помірна)</li><li><strong>Рекомендація:</strong> Рекомендовано до співбесіди + найму / з застереженнями / лише виконавча роль / НЕ рекомендовано</li><li><strong>10 рис</strong> з балами 1-10, відсортовано від найслабшої до найсильнішої з розгорнутим описом кожної</li><li>Сильні сторони і ризики у вигляді кольорових бейджів</li><li>Усі текстові відповіді кандидата на блок продуктивності</li></ul>"]
+    ]
+  },
+  enneagram: {
+    icon: "🌀", color: "#7c3aed",
+    title: "Еннеаграма особистості",
+    meta: "10 хвилин · 45 тверджень за 5-бальною шкалою",
+    sections: [
+      ["Що вимірює", "<p>Класична методика типології з <strong>9 типами особистості</strong>, що описують різні мотиваційні моделі поведінки людини — що внутрішньо її рухає, як вона приймає рішення, чого боїться і до чого прагне.</p>"],
+      ["9 типів", "<ul><li><strong>1. Реформатор</strong> — стандарти, удосконалення, правильність</li><li><strong>2. Помічник</strong> — турбота про інших, потреба бути потрібним</li><li><strong>3. Досягач</strong> — успіх, цілі, конкуренція</li><li><strong>4. Індивідуаліст</strong> — автентичність, креативність, глибина</li><li><strong>5. Дослідник</strong> — знання, аналіз, особистий простір</li><li><strong>6. Лоялист</strong> — відданість, обережність, безпека</li><li><strong>7. Ентузіаст</strong> — пригоди, різноманіття, оптимізм</li><li><strong>8. Виклик</strong> — сила, прямота, захист справедливості</li><li><strong>9. Миротворець</strong> — гармонія, посередництво, дипломатія</li></ul>"],
+      ["Що отримує HR", "<ul><li>Великий кольоровий круг з домінуючим типом і відсотком</li><li>Профіль по всіх 9 типах із кольоровими барами</li><li>Радар-діаграма для візуального порівняння</li><li>AI-резюме: для яких ролей підходить, сильні сторони, можливі ризики</li></ul>"]
+    ]
+  },
+  disc: {
+    icon: "📊", color: "#dc2626",
+    title: "DISC · стиль робочої поведінки",
+    meta: "7-10 хвилин · 24 твердження за 5-бальною шкалою",
+    sections: [
+      ["Що вимірює", "<p>Найпрактичніший і найкоротший тест системи. Описує робочий стиль за <strong>4 вимірами</strong>, які показують <em>як</em> людина працює в команді — швидко чи методично, на завдання чи на людей.</p>"],
+      ["4 виміри", "<ul><li><strong>D (Dominance)</strong> — Домінантність: результат, рішучість, контроль, виклик. Підходить для керівних ролей, b2b-продажів, кризового менеджменту</li><li><strong>I (Influence)</strong> — Вплив: люди, ентузіазм, переконання, енергія. Підходить для маркетингу, b2c-продажів, PR, навчання</li><li><strong>S (Steadiness)</strong> — Стійкість: стабільність, терпіння, підтримка, спокій. Підходить для операцій, HR, клієнтського сервісу</li><li><strong>C (Conscientiousness)</strong> — Сумлінність: точність, якість, аналіз, стандарти. Підходить для аналітики, фінансів, юриспруденції, QA</li></ul>"],
+      ["Що отримує HR", "<ul><li>Кольоровий блок з домінуючим стилем або гібридом (D/I, S/C тощо)</li><li>Класична квадрантна DISC-діаграма з позицією кандидата</li><li>Розподіл відсотків по всіх 4 вимірах</li><li>Опис під яку команду/роль підходить + ризики стилю</li></ul>"]
+    ]
+  },
+  bigfive: {
+    icon: "🌌", color: "#8b5cf6",
+    title: "Big Five (OCEAN)",
+    meta: "8-12 хвилин · 30 тверджень за 5-бальною шкалою",
+    sections: [
+      ["Що вимірює", "<p>Найнауковіша модель особистості. Розроблена в академічній психології та <strong>найбільш валідована</strong> з усіх існуючих. 5 ключових вимірів, що зустрічаються у профілі будь-якої людини незалежно від культури.</p>"],
+      ["5 вимірів OCEAN", "<ul><li><strong>O (Openness)</strong> — Відкритість досвіду: цікавість, креативність, готовність до нового</li><li><strong>C (Conscientiousness)</strong> — Сумлінність: дисципліна, планування, надійність</li><li><strong>E (Extraversion)</strong> — Екстраверсія: соціальність, енергія, ініціатива</li><li><strong>A (Agreeableness)</strong> — Доброзичливість: довіра, емпатія, готовність співпрацювати</li><li><strong>N (Neuroticism)</strong> — Емоційна нестабільність: тривожність, вразливість до стресу. <em>Низький рівень — стресостійкість, високий — ризик вигорання</em></li></ul>"],
+      ["Що отримує HR", "<ul><li>Кольоровий блок з домінуючим виміром (O, C, E або A — N виключений як ризик-фактор)</li><li>Профіль OCEAN з кольоровими барами</li><li>Розгорнутий висновок по кожному виміру: Низький / Середній / Високий + опис що це означає для робочих ролей</li><li>Радар-діаграма по 5 вимірах</li><li>AI-резюме</li></ul>"]
+    ]
+  },
+  iq: {
+    icon: "🧠", color: "#eab308",
+    title: "IQ-тест · когнітивні здібності",
+    meta: "15 хвилин з таймером · 15 завдань",
+    sections: [
+      ["Що вимірює", "<p>Когнітивний рівень кандидата за <strong>класичною IQ-шкалою</strong>. Як швидко людина мислить, як добре вирішує абстрактні задачі, чи здатна до складного аналізу.</p>"],
+      ["Які завдання", "<ul><li>Числові послідовності (продовжити логіку)</li><li>Аналогії (А відноситься до Б, як В відноситься до ?)</li><li>Словниковий запас (синоніми, антоніми)</li><li>Просторове мислення (трансформації фігур)</li><li>Логічні висновки (силогізми)</li><li>Лічба і пропорції</li></ul>"],
+      ["Як це працює", "<p>Тест <strong>обмежений часом</strong> — 15 хвилин на всі 15 завдань. Таймер на екрані з обратним відліком. У кінці червоніє при ≤ 60 секундах. Якщо час спливе — збережуться лише пройдені відповіді.</p>"],
+      ["Що отримує HR", "<ul><li><strong>IQ за класичною шкалою</strong> (70-140)</li><li>Рівень: Дуже високий (135+), Високий (110-134), Вище середнього (100-109), Середній (90-99), Низький (80-89), Дуже низький (<80)</li><li>Рекомендації за рівнем: на які ролі підходить (керівні, експертні, аналітичні, виконавчі)</li></ul>"]
+    ]
+  },
+  reproduction: {
+    icon: "👁️", color: "#10b981",
+    title: "Тест на здатність відтворення",
+    meta: "5 хвилин · 10 завдань на сприйняття-памʼять-точність",
+    sections: [
+      ["Що вимірює", "<p>Унікальна методика, що показує <strong>наскільки точно</strong> кандидат сприймає та повторює інструкції. Чи запамʼятовує деталі з першого разу, чи спотворює їх. Критично для всіх ролей, де неточне виконання інструкції коштує дорого.</p>"],
+      ["Як це працює", "<p>Кандидату показують стимул (кольори, числа, фігури, текст, інструкцію) на <strong>4-7 секунд</strong>, потім стимул зникає → ставиться питання про побачене. Повернутися назад неможливо — це тест на сприйняття з першого разу.</p>"],
+      ["Типи завдань", "<ul><li>Послідовність кольорів — назвати колір на позиції N</li><li>Послідовність чисел — пригадати конкретне число</li><li>Геометричні фігури — назвати другу/третю</li><li>Текстовий опис подій — що було у контракті</li><li>Інструкція з кнопками — яка остання</li><li>Дата і час зустрічі — пригадати годину</li><li>Email адреса — який домен</li><li>Послідовність задач — що було третім</li><li>Математична інструкція — який результат</li></ul>"],
+      ["Кому критично важливо", "<ul><li>Керівні позиції (точне розуміння директив від власника/борд)</li><li>Фінанси, бухгалтерія, юристи</li><li>Інженерія, виробництво</li><li>Медицина, авіація, безпека</li><li>Робота з обладнанням</li><li>Будь-які ролі з критичним «не можна помилитись» компонентом</li></ul>"]
+    ]
+  }
+};
+
+function openTestModal(key) {
+  const t = TEST_DETAILS[key];
+  if (!t) return;
+  const body = document.getElementById('testModalBody');
+  let html = `<h2><span style="background:${t.color}20; color:${t.color}; padding:8px 12px; border-radius:10px; font-size:22px;">${t.icon}</span> ${t.title}</h2>`;
+  html += `<div class="test-modal-meta">${t.meta}</div>`;
+  t.sections.forEach(([h4, content]) => {
+    html += `<h4>${h4}</h4>${content}`;
+  });
+  body.innerHTML = html;
+  document.getElementById('testModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTestModal() {
+  document.getElementById('testModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.test-card');
+  if (card) openTestModal(card.dataset.test);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeTestModal();
+});
 </script>
 </body>
 </html>
