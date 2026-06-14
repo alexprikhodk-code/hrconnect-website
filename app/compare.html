@@ -209,8 +209,18 @@ function render(candidates) {
     return `<td><span class="pill ${r.cls}">${esc(r.text)}</span></td>`;
   }).join('') + `</tr>`;
 
-  rows += buildRow('IQ', candidates.map(c => c.iq), (v, i) => v == null ? '—' : v + ' <span class="pill amber">' + esc(candidates[i].iq_band || '') + '</span>');
-  rows += buildRow('Відтворення', candidates.map(c => c.reproduction), (v, i) => v == null ? '—' : v + ' <span class="pill amber">' + esc(candidates[i].reproduction_band || '') + '</span>');
+  rows += buildRow('IQ', candidates.map(c => c.iq), (v, i) => {
+    if (v == null) return '—';
+    const band = candidates[i].iq_band || '';
+    const cls = band === 'Дуже високий' || band === 'Високий' ? 'green' : (band === 'Низький' || band === 'Дуже низький' ? 'red' : 'amber');
+    return '<strong>' + v + '</strong> <span class="pill ' + cls + '">' + esc(band) + '</span>';
+  });
+  rows += buildRow('Відтворення', candidates.map(c => c.reproduction), (v, i) => {
+    if (v == null) return '—';
+    const band = candidates[i].reproduction_band || '';
+    const cls = band === 'Високий' ? 'green' : (band === 'Низький' ? 'red' : 'amber');
+    return '<strong>' + v + '%</strong> <span class="pill ' + cls + '">' + esc(band) + '</span>';
+  });
 
   // === GROUP 3: Точки A-J ===
   rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">Особистісні риси (бали з 10)</td></tr>`;

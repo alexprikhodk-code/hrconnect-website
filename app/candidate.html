@@ -374,6 +374,8 @@ function render(c) {
           <a href="/app/enneagram.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌀 ${c.enneagram_type != null ? 'Еннеаграма: Тип ' + c.enneagram_type : 'Еннеаграма'}</a>
           <a href="/app/disc.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">📊 ${c.disc_dominant ? 'DISC: ' + (c.disc_profile || c.disc_dominant) : 'DISC'}</a>
           <a href="/app/bigfive.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌌 ${c.bigfive_dominant ? 'Big Five: ' + c.bigfive_dominant : 'Big Five'}</a>
+          <a href="/test/iq/?t=${c.test_link_token || ''}" target="_blank" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🧠 ${c.iq != null ? 'IQ: ' + c.iq : 'IQ-тест'}</a>
+          <a href="/test/reproduction/?t=${c.test_link_token || ''}" target="_blank" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">👁️ ${c.reproduction != null ? 'Відтворення: ' + c.reproduction + '%' : 'Відтворення'}</a>
         </div>
       </div>
       <div class="big-verdict ${vcls}">

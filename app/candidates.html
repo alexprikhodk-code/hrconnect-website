@@ -114,12 +114,16 @@ async function refresh() {
       const ennUrl = c.test_link_token ? (window.location.origin + '/test/enneagram/?t=' + c.test_link_token) : '';
       const discUrl = c.test_link_token ? (window.location.origin + '/test/disc/?t=' + c.test_link_token) : '';
       const bfUrl   = c.test_link_token ? (window.location.origin + '/test/bigfive/?t=' + c.test_link_token) : '';
+      const iqUrl   = c.test_link_token ? (window.location.origin + '/test/iq/?t=' + c.test_link_token) : '';
+      const repUrl  = c.test_link_token ? (window.location.origin + '/test/reproduction/?t=' + c.test_link_token) : '';
       // Compute test completion progress
       const tests = [
         c.test_status === 'completed' || !!c.raw_answers,  // main
         c.enneagram_type != null,                           // enneagram
         !!c.disc_dominant,                                  // disc
-        !!c.bigfive_dominant                                // bigfive
+        !!c.bigfive_dominant,                               // bigfive
+        c.iq != null,                                       // iq
+        c.reproduction != null                              // reproduction
       ];
       const completed = tests.filter(Boolean).length;
       const total = tests.length;
@@ -136,6 +140,8 @@ async function refresh() {
   (ennUrl ? '<div style="margin-bottom:6px"><a href="' + ennUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌀 Еннеаграма</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">9 типів особистості — що внутрішньо рухає людиною</div></div>' : '') +
   (discUrl ? '<div style="margin-bottom:6px"><a href="' + discUrl + '" target="_blank" style="font-size:12px; font-weight:600">📊 DISC</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">стиль робочої поведінки (Dominance/Influence/Steadiness/Conscientiousness)</div></div>' : '') +
   (bfUrl ? '<div style="margin-bottom:6px"><a href="' + bfUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌌 Big Five</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">5 наукових вимірів OCEAN — найбільш валідована модель</div></div>' : '') +
+  (iqUrl ? '<div style="margin-bottom:6px"><a href="' + iqUrl + '" target="_blank" style="font-size:12px; font-weight:600">🧠 IQ</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">когнітивні здібності — логіка, лічба, аналогії (15 хв з таймером)</div></div>' : '') +
+  (repUrl ? '<div style="margin-bottom:6px"><a href="' + repUrl + '" target="_blank" style="font-size:12px; font-weight:600">👁️ Відтворення</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">точність сприйняття інструкцій та задач (5 хв)</div></div>' : '') +
 '</div></td>' +
         '<td style="padding:12px 16px"><button class="btn btn-ghost" style="padding:5px 12px; font-size:12px" onclick="deleteCand(\'' + c.id + '\')">Видалити</button></td>' +
       '</tr>';

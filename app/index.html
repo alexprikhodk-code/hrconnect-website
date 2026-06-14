@@ -187,7 +187,9 @@ function testsStatusCell(c) {
     { done: c.test_status === 'completed' || !!c.raw_answers, icon: '📋' },
     { done: c.enneagram_type != null,                          icon: '🌀' },
     { done: !!c.disc_dominant,                                  icon: '📊' },
-    { done: !!c.bigfive_dominant,                               icon: '🌌' }
+    { done: !!c.bigfive_dominant,                               icon: '🌌' },
+    { done: c.iq != null,                                       icon: '🧠' },
+    { done: c.reproduction != null,                             icon: '👁️' }
   ];
   const completed = tests.filter(t => t.done).length;
   const total = tests.length;
