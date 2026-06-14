@@ -118,6 +118,12 @@
       return;
     }
     localStorage.removeItem(stateKey);
+
+    // Fire-and-forget email notification to HR (won't block UX if it fails)
+    sb.functions.invoke('notify-test-complete', {
+      body: { candidate_id: candidate.id, test_type: 'disc' }
+    }).catch(err => console.warn('Email notification failed (non-blocking):', err));
+
     goToScreen('done');
   };
 
