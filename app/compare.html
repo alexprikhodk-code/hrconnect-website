@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Порівняння кандидатів — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.back-link { color: var(--c-muted); font-size: 14px; }
+.title-block h1 { font-size: 26px; margin: 6px 0 4px; }
+.title-block .meta { color: var(--c-muted); font-size: 13px; }
+.head-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+
+.compare-wrap { background: white; border-radius: 16px; box-shadow: var(--shadow-sm); overflow: hidden; overflow-x: auto; }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-table th, .compare-table td { padding: 14px 16px; text-align: left; vertical-align: middle; }
+.compare-table thead th { background: linear-gradient(135deg, #1f4e78 0%, #2e7d8f 100%); color: white; font-weight: 700; font-size: 13px; }
+.compare-table thead th.sticky-col { background: #173d5e; }
+.compare-table .group-row td { background: #f8fafc; color: var(--c-brand); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-top: 2px solid var(--c-line); padding: 10px 16px; }
+.compare-table tbody td { border-bottom: 1px solid #f1f5f9; }
+.compare-table tbody tr:last-child td { border-bottom: none; }
+.compare-table .sticky-col { position: sticky; left: 0; background: white; z-index: 2; font-weight: 600; color: var(--c-muted); min-width: 200px; border-right: 2px solid var(--c-line); }
+.compare-table .candidate-header { font-size: 15px; padding: 16px; min-width: 200px; }
+.compare-table .candidate-header .name { font-weight: 700; font-size: 16px; color: white; }
+.compare-table .candidate-header .sub { font-size: 12px; opacity: 0.85; font-weight: 400; }
+.compare-table .candidate-header a { color: white; text-decoration: underline; opacity: 0.9; font-size: 12px; }
+
+.val-cell { font-weight: 600; font-size: 14px; }
+.val-cell.best { background: rgba(34, 197, 94, 0.12); color: #166534; }
+.val-cell.worst { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+.val-cell.empty { color: var(--c-muted); font-weight: 400; }
+
+.pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.pill.green { background: #dcfce7; color: #166534; }
+.pill.red { background: #fee2e2; color: #b91c1c; }
+.pill.amber { background: #fef3c7; color: #b45309; }
+
+.empty-state { background: white; border-radius: 14px; padding: 60px 28px; text-align: center; color: var(--c-muted); box-shadow: var(--shadow-sm); }
+
+.summary-row td { background: #fef3c7; }
+.summary-row .recommended { color: #166534; font-weight: 700; }
+.summary-row .risky { color: #b91c1c; font-weight: 700; }
+
+.mini-bar { display: inline-block; width: 80px; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; vertical-align: middle; margin-right: 8px; }
+.mini-bar > div { height: 100%; border-radius: 999px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item active">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div><a class="back-link" href="/app/">← До дашборду</a></div>
+    </div>
+    <div class="app-content">
+      <div class="head-row">
+        <div class="title-block">
+          <h1>Порівняння кандидатів</h1>
+          <div class="meta" id="metaLine">—</div>
+        </div>
+      </div>
+      <div id="loader" class="empty-state">Завантаження...</div>
+      <div id="content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/test/enneagram/questions.js"></script>
+<script src="/test/disc/questions.js"></script>
+<script src="/test/bigfive/questions.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+const POINT_ORDER = ['A','B','C','D','E','F','G','H','I','J'];
+const POINT_NAMES = {
+  A: 'Стабільність', B: 'Оптимізм', C: 'Самоволодіння', D: 'Впевненість',
+  E: 'Енергія', F: 'Наполегливість', G: 'Відповідальність', H: 'Правильність оцінки',
+  I: 'Чуйність', J: 'Спілкування'
+};
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function score10(rawScore) {
+  if (rawScore == null) return null;
+  return Math.max(1, Math.min(10, Math.round((rawScore + 100) / 20)));
+}
+
+function findBestWorst(values) {
+  // values: array of numbers or null. Returns { bestIdx, worstIdx } or null if all same/missing.
+  const nums = values.map((v, i) => ({ v, i })).filter(x => x.v != null && !isNaN(x.v));
+  if (nums.length < 2) return { bestIdx: -1, worstIdx: -1 };
+  const max = Math.max(...nums.map(x => x.v));
+  const min = Math.min(...nums.map(x => x.v));
+  if (max === min) return { bestIdx: -1, worstIdx: -1 };
+  return {
+    bestIdx: nums.find(x => x.v === max)?.i ?? -1,
+    worstIdx: nums.find(x => x.v === min)?.i ?? -1
+  };
+}
+
+function buildRow(label, values, formatter, higherIsBetter = true) {
+  const numerics = values.map(v => (typeof v === 'number' || (v != null && !isNaN(parseFloat(v)))) ? parseFloat(v) : null);
+  const { bestIdx, worstIdx } = findBestWorst(numerics);
+  const cells = values.map((v, i) => {
+    const isBest = higherIsBetter ? i === bestIdx : i === worstIdx;
+    const isWorst = higherIsBetter ? i === worstIdx : i === bestIdx;
+    const cls = v == null ? 'empty' : (isBest ? 'best' : (isWorst ? 'worst' : ''));
+    return `<td class="val-cell ${cls}">${formatter(v, i)}</td>`;
+  });
+  return `<tr><td class="sticky-col">${esc(label)}</td>${cells.join('')}</tr>`;
+}
+
+function pillByLevel(level) {
+  if (!level) return '';
+  if (level === 'Високий') return '<span class="pill green">' + level + '</span>';
+  if (level === 'Низький') return '<span class="pill red">' + level + '</span>';
+  return '<span class="pill amber">' + level + '</span>';
+}
+
+function computeRecommendation(c) {
+  if (!c.verdict) return null;
+  const isPerf = c.verdict === 'Перформер';
+  const points = c.points || {};
+  let risks = 0;
+  ['B','G','H','C','F'].forEach(code => {
+    if (points[code] && points[code].level === 'Низький') risks++;
+  });
+  if (c.iq != null && c.iq < 90) risks++;
+  if (c.reproduction != null && c.reproduction < 65) risks++;
+
+  const isHighConf = c.verdict_confidence === 'висока';
+  if (isPerf && isHighConf && risks <= 1) return { text: 'Рекомендовано', cls: 'green' };
+  if (isPerf && risks <= 2) return { text: 'З застереженнями', cls: 'amber' };
+  if (isPerf && risks >= 3) return { text: 'Лише виконавча роль', cls: 'amber' };
+  if (!isPerf && risks <= 1) return { text: 'Виконавча з наглядом', cls: 'amber' };
+  return { text: 'НЕ рекомендовано', cls: 'red' };
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  const idsStr = params.get('ids') || '';
+  const ids = idsStr.split(',').filter(Boolean);
+  if (ids.length < 2) {
+    document.getElementById('loader').innerHTML = 'Оберіть щонайменше 2 кандидатів для порівняння.<br><a href="/app/">← До дашборду</a>';
+    return;
+  }
+  await requireAuth();
+
+  const { data, error } = await sb.from('candidates').select('*').in('id', ids);
+  if (error || !data || data.length < 2) {
+    document.getElementById('loader').innerHTML = 'Не вдалось завантажити кандидатів.<br><a href="/app/">← До дашборду</a>';
+    return;
+  }
+  // Preserve URL order
+  const orderedData = ids.map(id => data.find(c => c.id === id)).filter(Boolean);
+  render(orderedData);
+}
+
+function render(candidates) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+  document.getElementById('metaLine').textContent = candidates.length + ' кандидатів · зеленим — найкраще значення в рядку, червоним — найгірше';
+
+  // Build headers
+  let headers = '<th class="sticky-col">Параметр</th>';
+  candidates.forEach(c => {
+    headers += `<th class="candidate-header">
+      <div class="name">${esc(c.name)}</div>
+      <div class="sub">${esc(c.position || '—')}</div>
+      <a href="/app/candidate.html?id=${c.id}">переглянути →</a>
+    </th>`;
+  });
+
+  let rows = '';
+
+  // === GROUP 1: Базова інформація ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">Базова інформація</td></tr>`;
+  rows += buildRow('Вік', candidates.map(c => c.age), v => v == null ? '—' : v);
+  rows += buildRow('Стать', candidates.map(c => c.sex), v => v || '—');
+  rows += `<tr><td class="sticky-col">Email</td>` + candidates.map(c => `<td>${esc(c.email || '—')}</td>`).join('') + `</tr>`;
+
+  // === GROUP 2: Основний тест ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">Основний тест — Продуктивність</td></tr>`;
+  rows += `<tr><td class="sticky-col">Вердикт</td>` + candidates.map(c => {
+    if (!c.verdict) return '<td class="val-cell empty">—</td>';
+    const cls = c.verdict === 'Перформер' ? 'green' : 'red';
+    const label = c.verdict === 'Перформер' ? 'Продуктивний' : (c.verdict === 'Делатель' ? 'Виконавець' : c.verdict);
+    return `<td><span class="pill ${cls}">${esc(label)}</span><div style="color:var(--c-muted); font-size:11px; margin-top:4px">впевн.: ${esc(c.verdict_confidence||'—')}</div></td>`;
+  }).join('') + `</tr>`;
+
+  rows += `<tr><td class="sticky-col">Рекомендація по найму</td>` + candidates.map(c => {
+    const r = computeRecommendation(c);
+    if (!r) return '<td class="val-cell empty">—</td>';
+    return `<td><span class="pill ${r.cls}">${esc(r.text)}</span></td>`;
+  }).join('') + `</tr>`;
+
+  rows += buildRow('IQ', candidates.map(c => c.iq), (v, i) => v == null ? '—' : v + ' <span class="pill amber">' + esc(candidates[i].iq_band || '') + '</span>');
+  rows += buildRow('Відтворення', candidates.map(c => c.reproduction), (v, i) => v == null ? '—' : v + ' <span class="pill amber">' + esc(candidates[i].reproduction_band || '') + '</span>');
+
+  // === GROUP 3: Точки A-J ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">Особистісні риси (бали з 10)</td></tr>`;
+  POINT_ORDER.forEach(code => {
+    const scores = candidates.map(c => {
+      const p = (c.points || {})[code];
+      return p && p.score != null ? score10(p.score) : null;
+    });
+    rows += buildRow(POINT_NAMES[code], scores, (v, i) => {
+      if (v == null) return '—';
+      const p = (candidates[i].points || {})[code];
+      const level = p?.level || (v <= 3 ? 'Низький' : (v <= 6 ? 'Середній' : 'Високий'));
+      const barColor = v <= 3 ? '#ef4444' : (v <= 6 ? '#eab308' : '#22c55e');
+      return `<span class="mini-bar"><div style="background:${barColor}; width:${v*10}%"></div></span><strong>${v}/10</strong>`;
+    });
+  });
+
+  // === GROUP 4: Еннеаграма ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">🌀 Еннеаграма</td></tr>`;
+  rows += `<tr><td class="sticky-col">Домінуючий тип</td>` + candidates.map(c => {
+    if (c.enneagram_type == null) return '<td class="val-cell empty">—</td>';
+    const t = ENNEAGRAM_TYPES[c.enneagram_type];
+    const pct = (c.enneagram_percentages || {})[c.enneagram_type] || '';
+    return `<td><div style="display:flex; align-items:center; gap:8px"><span style="display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; background:${t.color}; color:white; font-weight:800; font-size:13px">${c.enneagram_type}</span><div><div style="font-weight:600">${esc(t.name)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div></td>`;
+  }).join('') + `</tr>`;
+
+  // === GROUP 5: DISC ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">📊 DISC — Робочий стиль</td></tr>`;
+  rows += `<tr><td class="sticky-col">Профіль</td>` + candidates.map(c => {
+    if (!c.disc_dominant) return '<td class="val-cell empty">—</td>';
+    const st = DISC_STYLES[c.disc_dominant];
+    const pct = (c.disc_percentages || {})[c.disc_dominant] || '';
+    return `<td><div style="display:flex; align-items:center; gap:8px"><span style="display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:${st.color}; color:white; font-weight:800; font-size:14px">${c.disc_profile || c.disc_dominant}</span><div><div style="font-weight:600">${esc(st.ua)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div></td>`;
+  }).join('') + `</tr>`;
+
+  ['D','I','S','C'].forEach(k => {
+    const pcts = candidates.map(c => (c.disc_percentages || {})[k] || null);
+    rows += buildRow(k + ' — ' + DISC_STYLES[k].ua, pcts, (v, i) => {
+      if (v == null) return '—';
+      const color = DISC_STYLES[k].color;
+      return `<span class="mini-bar"><div style="background:${color}; width:${v}%"></div></span><strong>${v}%</strong>`;
+    });
+  });
+
+  // === GROUP 6: Big Five ===
+  rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">🌌 Big Five (OCEAN)</td></tr>`;
+  rows += `<tr><td class="sticky-col">Домінуючий вимір</td>` + candidates.map(c => {
+    if (!c.bigfive_dominant) return '<td class="val-cell empty">—</td>';
+    const dim = BIGFIVE_DIMS[c.bigfive_dominant];
+    const pct = (c.bigfive_percentages || {})[c.bigfive_dominant] || '';
+    return `<td><div style="display:flex; align-items:center; gap:8px"><span style="display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; background:${dim.color}; color:white; font-weight:800; font-size:13px">${c.bigfive_dominant}</span><div><div style="font-weight:600">${esc(dim.ua)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div></td>`;
+  }).join('') + `</tr>`;
+
+  ['O','C','E','A','N'].forEach(k => {
+    const pcts = candidates.map(c => (c.bigfive_percentages || {})[k] || null);
+    rows += buildRow(k + ' — ' + BIGFIVE_DIMS[k].ua, pcts, (v, i) => {
+      if (v == null) return '—';
+      const color = BIGFIVE_DIMS[k].color;
+      return `<span class="mini-bar"><div style="background:${color}; width:${v}%"></div></span><strong>${v}%</strong>`;
+    }, k !== 'N'); // For N (Neuroticism), LOWER is better
+  });
+
+  document.getElementById('content').innerHTML = `
+    <div class="compare-wrap">
+      <table class="compare-table">
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+load();
+</script>
+</body></html>

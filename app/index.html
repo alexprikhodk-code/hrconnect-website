@@ -3,8 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Кабінет — AI-HRconnect</title>
+<title>Дашборд — AI-HRconnect</title>
 <link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.dash-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.dash-toolbar .info { color: var(--c-muted); font-size: 14px; flex: 1; }
+.dash-toolbar input { padding: 8px 12px; border: 1px solid var(--c-line); border-radius: 8px; font-size: 14px; min-width: 220px; }
+.btn-compare { background: var(--c-brand); color: white; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; opacity: 0.4; pointer-events: none; transition: all .2s; }
+.btn-compare.active { opacity: 1; pointer-events: auto; }
+.btn-compare.active:hover { background: #173d5e; }
+
+.card-table { padding: 0; overflow: hidden; overflow-x: auto; }
+.dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dash-table thead { background: #f8fafc; border-bottom: 1px solid var(--c-line); }
+.dash-table th { text-align: left; padding: 12px 10px; font-weight: 600; color: var(--c-ink); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+.dash-table td { padding: 14px 10px; border-top: 1px solid var(--c-line); vertical-align: middle; }
+.dash-table tr:hover { background: #f9fbfd; cursor: pointer; }
+.dash-table tr.selected { background: #eff6fb; }
+.dash-table .row-check { width: 36px; }
+.dash-table input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--c-brand); }
+.name-cell { font-weight: 700; min-width: 140px; }
+.pos-cell { color: var(--c-muted); min-width: 130px; }
+.test-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.test-pill.green { background: #dcfce7; color: #166534; }
+.test-pill.red { background: #fee2e2; color: #b91c1c; }
+.test-pill.amber { background: #fef3c7; color: #b45309; }
+.test-pill.gray { background: #f1f5f9; color: var(--c-muted); }
+.disc-circle, .enn-circle { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; color: white; font-weight: 800; font-size: 13px; }
+.empty-cell { color: var(--c-muted); font-size: 16px; }
+</style>
 </head>
 <body>
 <div class="app-shell">
@@ -34,35 +61,35 @@
 
     <div class="app-content">
       <h2 style="margin-top:0">Дашборд</h2>
-      <p class="muted">Ваші кандидати — кожен видно лише вам.</p>
+      <p class="muted">Усі кандидати + результати тестів. Оберіть 2-5 щоб порівняти side-by-side.</p>
 
-      <div class="card" id="emptyState" style="display:none">
-        <h3 style="margin-top:0">У вас поки немає кандидатів</h3>
-        <p>Щоб додати кандидата:</p>
-        <ol style="line-height:1.8">
-          <li>Перейдіть у <a href="/app/candidates.html">«Кандидати»</a> і натисніть <strong>«+ Запросити кандидата»</strong></li>
-          <li>Відправте йому/їй посилання, що зʼявиться</li>
-          <li>Коли кандидат завершить тест — результат автоматично зʼявиться тут</li>
-        </ol>
-        <p style="margin-top:18px">Альтернативно — <a href="/app/upload.html">завантажте PDF готового тесту</a></p>
+      <div class="dash-toolbar">
+        <input type="text" id="search" placeholder="🔍 Пошук за іменем або посадою…">
+        <div class="info" id="selectionInfo">Виділено: 0 з 5</div>
+        <button class="btn-compare" id="btnCompare" onclick="openCompare()">⚖️ Порівняти (0)</button>
       </div>
 
-      <div id="candidatesTable" style="display:none">
-        <div class="card" style="padding:0; overflow:hidden">
-          <table style="width:100%; border-collapse:collapse; font-size:14px">
-            <thead style="background:#f8fafc; border-bottom:1px solid var(--c-line)">
-              <tr>
-                <th style="text-align:left; padding:12px 16px">Кандидат</th>
-                <th style="text-align:left; padding:12px 16px">Посада</th>
-                <th style="text-align:left; padding:12px 16px">Вердикт</th>
-                <th style="text-align:left; padding:12px 16px">IQ</th>
-                <th style="text-align:left; padding:12px 16px">Відтворення</th>
-                <th style="text-align:left; padding:12px 16px">Створено</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
+      <div class="card card-table" id="tableWrap" style="display:none">
+        <table class="dash-table">
+          <thead><tr>
+            <th class="row-check"></th>
+            <th>Кандидат</th>
+            <th>Посада</th>
+            <th>Вердикт</th>
+            <th>IQ</th>
+            <th>Відтворення</th>
+            <th>🌀 Еннеаграма</th>
+            <th>📊 DISC</th>
+            <th>🌌 Big Five</th>
+            <th>Створено</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="card" id="emptyState" style="display:none; text-align: center; padding: 40px;">
+        <h3 style="margin-top:0">У вас поки немає кандидатів</h3>
+        <p>Щоб додати: перейдіть у <a href="/app/candidates.html">«Кандидати»</a> → <strong>«+ Запросити кандидата»</strong>, отримайте посилання й надішліть людині.</p>
       </div>
     </div>
   </main>
@@ -72,8 +99,143 @@
 <script src="/assets/js/env.js"></script>
 <script src="/assets/js/supabase.js"></script>
 <script src="/assets/js/auth.js"></script>
+<script src="/test/enneagram/questions.js"></script>
+<script src="/test/disc/questions.js"></script>
+<script src="/test/bigfive/questions.js"></script>
 <script>
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+let candidatesData = [];
+const selected = new Set();
+const MAX_SELECT = 5;
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function verdictPill(v) {
+  if (!v) return '<span class="empty-cell">—</span>';
+  if (v === 'Перформер') return '<span class="test-pill green">Продуктивний</span>';
+  if (v === 'Делатель')  return '<span class="test-pill red">Виконавець</span>';
+  return '<span class="test-pill gray">' + esc(v) + '</span>';
+}
+
+function iqPill(iq, band) {
+  if (iq == null) return '<span class="empty-cell">—</span>';
+  const cls = (band === 'Дуже високий' || band === 'Високий') ? 'green' : (band === 'Низький' ? 'red' : 'amber');
+  return '<strong>' + iq + '</strong> <span class="test-pill ' + cls + '">' + esc(band || '') + '</span>';
+}
+
+function reproPill(r, band) {
+  if (r == null) return '<span class="empty-cell">—</span>';
+  const cls = band === 'Високий' ? 'green' : (band === 'Низький' ? 'red' : 'amber');
+  return '<strong>' + r + '</strong> <span class="test-pill ' + cls + '">' + esc(band || '') + '</span>';
+}
+
+function ennCell(c) {
+  if (c.enneagram_type == null) return '<span class="empty-cell">—</span>';
+  const t = ENNEAGRAM_TYPES[c.enneagram_type];
+  if (!t) return c.enneagram_type;
+  const pct = (c.enneagram_percentages || {})[c.enneagram_type] || '';
+  return `<div style="display:flex; align-items:center; gap:8px"><span class="enn-circle" style="background:${t.color}">${c.enneagram_type}</span><div><div style="font-weight:600; font-size:12px">${esc(t.name)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div>`;
+}
+
+function discCell(c) {
+  if (!c.disc_dominant) return '<span class="empty-cell">—</span>';
+  const st = DISC_STYLES[c.disc_dominant];
+  if (!st) return c.disc_dominant;
+  const pct = (c.disc_percentages || {})[c.disc_dominant] || '';
+  return `<div style="display:flex; align-items:center; gap:8px"><span class="disc-circle" style="background:${st.color}">${c.disc_profile || c.disc_dominant}</span><div><div style="font-weight:600; font-size:12px">${esc(st.ua)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div>`;
+}
+
+function bfCell(c) {
+  if (!c.bigfive_dominant) return '<span class="empty-cell">—</span>';
+  const dim = BIGFIVE_DIMS[c.bigfive_dominant];
+  if (!dim) return c.bigfive_dominant;
+  const pct = (c.bigfive_percentages || {})[c.bigfive_dominant] || '';
+  return `<div style="display:flex; align-items:center; gap:8px"><span class="disc-circle" style="background:${dim.color}; border-radius:8px">${c.bigfive_dominant}</span><div><div style="font-weight:600; font-size:12px">${esc(dim.ua)}</div><div style="color:var(--c-muted); font-size:11px">${pct}%</div></div></div>`;
+}
+
+function updateToolbar() {
+  const n = selected.size;
+  document.getElementById('selectionInfo').textContent = `Виділено: ${n} з ${MAX_SELECT}`;
+  const btn = document.getElementById('btnCompare');
+  btn.textContent = '⚖️ Порівняти (' + n + ')';
+  btn.classList.toggle('active', n >= 2);
+}
+
+function openCompare() {
+  if (selected.size < 2) return;
+  const ids = Array.from(selected).join(',');
+  window.location.href = '/app/compare.html?ids=' + ids;
+}
+
+function render() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = candidatesData.filter(c => {
+    if (!q) return true;
+    return (c.name || '').toLowerCase().includes(q) || (c.position || '').toLowerCase().includes(q);
+  });
+
+  if (filtered.length === 0) {
+    document.getElementById('tableWrap').style.display = 'none';
+    document.getElementById('emptyState').style.display = candidatesData.length === 0 ? 'block' : 'none';
+    if (candidatesData.length > 0 && filtered.length === 0) {
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('emptyState').innerHTML = '<h3>Нічого не знайдено</h3><p>Спробуйте інший пошук.</p>';
+    }
+    return;
+  }
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('tableWrap').style.display = 'block';
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = filtered.map(c => {
+    const isSel = selected.has(c.id);
+    const created = c.created_at ? new Date(c.created_at).toLocaleDateString('uk-UA') : '';
+    return `<tr class="${isSel ? 'selected' : ''}" data-id="${c.id}">
+      <td class="row-check"><input type="checkbox" data-id="${c.id}" ${isSel ? 'checked' : ''} onclick="event.stopPropagation()"></td>
+      <td class="name-cell">${esc(c.name)}</td>
+      <td class="pos-cell">${esc(c.position || '—')}</td>
+      <td>${verdictPill(c.verdict)}</td>
+      <td>${iqPill(c.iq, c.iq_band)}</td>
+      <td>${reproPill(c.reproduction, c.reproduction_band)}</td>
+      <td>${ennCell(c)}</td>
+      <td>${discCell(c)}</td>
+      <td>${bfCell(c)}</td>
+      <td style="color:var(--c-muted); font-size:12px; white-space:nowrap">${created}</td>
+    </tr>`;
+  }).join('');
+
+  // Wire up checkboxes
+  tbody.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.dataset.id;
+      if (cb.checked) {
+        if (selected.size >= MAX_SELECT) {
+          cb.checked = false;
+          alert('Можна обрати максимум ' + MAX_SELECT + ' кандидатів для порівняння.');
+          return;
+        }
+        selected.add(id);
+      } else {
+        selected.delete(id);
+      }
+      cb.closest('tr').classList.toggle('selected', cb.checked);
+      updateToolbar();
+    });
+  });
+
+  // Wire up row clicks → open candidate
+  tbody.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.closest('input')) return;
+      window.location.href = '/app/candidate.html?id=' + tr.dataset.id;
+    });
+  });
+}
+
+document.getElementById('search').oninput = render;
+
 (async () => {
   const user = await requireAuth();
   if (!user) return;
@@ -88,28 +250,11 @@ document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRc
     document.getElementById('quota').textContent = 'Тестів: ' + sub.tests_used_this_month + ' / ' + sub.tests_quota + ' цього місяця';
   }
 
-  // Fetch candidates
-  const { data: cands, error } = await sb.from('candidates').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('candidates').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
-  if (!cands || cands.length === 0) {
-    document.getElementById('emptyState').style.display = 'block';
-  } else {
-    document.getElementById('candidatesTable').style.display = 'block';
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = cands.map(c => {
-      const vcolor = c.verdict === 'Перформер' ? 'var(--c-green)' : (c.verdict === 'Делатель' ? 'var(--c-red)' : 'var(--c-muted)');
-      const vlabel = c.verdict === 'Перформер' ? 'Продуктивний' : (c.verdict === 'Делатель' ? 'Виконавець' : '—');
-      return `<tr style="border-top:1px solid var(--c-line); cursor:pointer" onclick="window.location.href='/app/candidate.html?id=${c.id}'">
-        <td style="padding:12px 16px; font-weight:600">${esc(c.name)}</td>
-        <td style="padding:12px 16px; color:var(--c-muted)">${esc(c.position || '—')}</td>
-        <td style="padding:12px 16px"><span style="color:${vcolor}; font-weight:600">${esc(vlabel)}</span></td>
-        <td style="padding:12px 16px">${c.iq ?? '—'}</td>
-        <td style="padding:12px 16px">${c.reproduction ?? '—'}</td>
-        <td style="padding:12px 16px; color:var(--c-muted); font-size:13px">${new Date(c.created_at).toLocaleDateString('uk-UA')}</td>
-      </tr>`;
-    }).join('');
-  }
+  candidatesData = data || [];
+  updateToolbar();
+  render();
 })();
-function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 </script>
 </body></html>

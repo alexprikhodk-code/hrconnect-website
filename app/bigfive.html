@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Big Five — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.head-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+.back-link { color: var(--c-muted); font-size: 14px; }
+.title-block h1 { font-size: 26px; margin: 6px 0 4px; }
+.title-block .meta { color: var(--c-muted); font-size: 13px; }
+
+.bf-grid { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 24px; background: white; border-radius: 16px; padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 18px; }
+.dom-card { text-align: center; }
+.dom-letter { width: 130px; height: 130px; border-radius: 24px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 60px; font-weight: 900; line-height: 1; box-shadow: 0 10px 32px rgba(0,0,0,0.14); }
+.dom-tag { color: var(--c-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.dom-name { font-size: 18px; font-weight: 700; margin: 4px 0 4px; }
+.dom-ua { color: var(--c-muted); font-size: 14px; margin-bottom: 10px; }
+.dom-pct { display: inline-block; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 999px; }
+.dom-desc { margin-top: 18px; font-size: 13px; color: #475569; line-height: 1.5; }
+
+.dims-list h3 { font-size: 14px; margin: 0 0 14px; font-weight: 600; }
+.dim-row { padding: 12px 0; border-bottom: 1px solid var(--c-line); }
+.dim-row:last-child { border-bottom: none; }
+.dim-row .head { display: grid; grid-template-columns: 32px 1fr 70px 50px; gap: 10px; align-items: center; }
+.dim-letter { width: 28px; height: 28px; border-radius: 8px; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; }
+.dim-name { font-size: 13.5px; font-weight: 600; color: var(--c-ink); }
+.dim-name .ua { display: block; font-size: 11px; color: var(--c-muted); font-weight: 400; margin-top: 1px; }
+.dim-bar { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.dim-bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+.dim-pct { text-align: right; font-weight: 700; font-size: 14px; }
+.dim-conclusion { font-size: 12.5px; color: #475569; line-height: 1.5; margin-top: 8px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid var(--c-brand-2); border-radius: 6px; }
+.level-tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-bottom: 6px; }
+.level-tag.low { background: #fee2e2; color: #b91c1c; }
+.level-tag.mid { background: #fef3c7; color: #b45309; }
+.level-tag.high { background: #dcfce7; color: #166534; }
+
+.radar-block { display: flex; align-items: center; justify-content: center; padding: 10px 0; }
+.radar-svg { max-width: 100%; height: auto; }
+.radar-label { font-size: 11px; fill: #475569; font-weight: 600; }
+.radar-label-ua { font-size: 9.5px; fill: #94a3b8; }
+
+.summary-card { background: white; border-radius: 16px; padding: 24px 28px; box-shadow: var(--shadow-sm); }
+.summary-card h3 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.summary-card h3 .spark { color: var(--c-accent); }
+.summary-text { font-size: 14px; line-height: 1.65; color: #334155; }
+
+.empty-state { background: white; border-radius: 14px; padding: 60px 28px; text-align: center; color: var(--c-muted); box-shadow: var(--shadow-sm); }
+
+@media (max-width: 1000px) { .bf-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div><a class="back-link" id="backLink">← Назад</a></div>
+    </div>
+    <div class="app-content">
+      <div class="head-row">
+        <div class="title-block">
+          <h1>Big Five — 5 наукових вимірів особистості</h1>
+          <div class="meta" id="metaLine">—</div>
+        </div>
+      </div>
+      <div id="loader" class="empty-state">Завантаження...</div>
+      <div id="content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/test/bigfive/questions.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function buildRadar(pcts) {
+  // 5-axis radar
+  const cx = 200, cy = 200, maxR = 140;
+  const numAxes = 5;
+  const ORDER = ['O','C','E','A','N'];
+
+  function pt(idx, value) {
+    const angle = -Math.PI / 2 + (idx / numAxes) * 2 * Math.PI;
+    const r = (value / 100) * maxR;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+  function axisPt(idx) {
+    const angle = -Math.PI / 2 + (idx / numAxes) * 2 * Math.PI;
+    return { x: cx + maxR * Math.cos(angle), y: cy + maxR * Math.sin(angle) };
+  }
+  function labelPt(idx, offset) {
+    const angle = -Math.PI / 2 + (idx / numAxes) * 2 * Math.PI;
+    const r = maxR + offset;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+
+  let bg = '';
+  [0.25, 0.5, 0.75, 1.0].forEach((scale, si) => {
+    const pts = ORDER.map((k, i) => {
+      const p = pt(i, scale * 100);
+      return p.x + ',' + p.y;
+    }).join(' ');
+    bg += `<polygon points="${pts}" fill="${si === 3 ? '#f8fafc' : 'none'}" stroke="#cbd5e1" stroke-width="0.7" stroke-dasharray="2,2"/>`;
+  });
+  ORDER.forEach((k, i) => {
+    const p = axisPt(i);
+    bg += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#cbd5e1" stroke-width="0.6"/>`;
+  });
+
+  const dataPts = ORDER.map((k, i) => {
+    const p = pt(i, pcts[k] || 0);
+    return p.x + ',' + p.y;
+  }).join(' ');
+
+  let labels = '';
+  ORDER.forEach((k, i) => {
+    const p = labelPt(i, 28);
+    const anchor = p.x > cx + 5 ? 'start' : (p.x < cx - 5 ? 'end' : 'middle');
+    const dim = BIGFIVE_DIMS[k];
+    labels += `<text x="${p.x}" y="${p.y - 4}" text-anchor="${anchor}" class="radar-label">${k} — ${pcts[k] || 0}%</text>
+              <text x="${p.x}" y="${p.y + 10}" text-anchor="${anchor}" class="radar-label-ua">${esc(dim.ua)}</text>`;
+  });
+
+  return `<svg class="radar-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    ${bg}
+    <polygon points="${dataPts}" fill="#8b5cf6" fill-opacity="0.32" stroke="#7c3aed" stroke-width="2"/>
+    ${labels}
+  </svg>`;
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  const candidateId = params.get('id');
+  if (!candidateId) {
+    document.getElementById('loader').innerHTML = 'Не вказано id кандидата.<br><a href="/app/candidates.html">← Назад</a>';
+    return;
+  }
+  await requireAuth();
+  const { data, error } = await sb.from('candidates').select('*').eq('id', candidateId).maybeSingle();
+  if (error || !data) {
+    document.getElementById('loader').innerHTML = 'Кандидата не знайдено.';
+    return;
+  }
+  document.getElementById('backLink').href = '/app/candidate.html?id=' + candidateId;
+  document.getElementById('backLink').textContent = '← Назад до кандидата';
+  document.getElementById('metaLine').textContent = data.name + (data.email ? ' · ' + data.email : '') + (data.bigfive_completed_at ? ' · ' + new Date(data.bigfive_completed_at).toLocaleDateString('uk-UA') : '');
+
+  if (!data.bigfive_dominant) {
+    const token = data.test_link_token;
+    const url = token ? (window.location.origin + '/test/bigfive/?t=' + token) : '';
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:48px; margin-bottom:14px">🌌</div>
+        <h3>Кандидат ще не пройшов тест Big Five</h3>
+        <p>Надішліть це посилання для проходження:</p>
+        ${url ? `<input type="text" readonly value="${esc(url)}" class="form-input" style="max-width:520px; margin:14px auto" onclick="this.select()">
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${esc(url)}'); this.textContent='✓ Скопійовано'">📋 Скопіювати посилання</button>` : ''}
+      </div>`;
+    return;
+  }
+  render(data);
+}
+
+function render(c) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const dom = c.bigfive_dominant;
+  const pcts = c.bigfive_percentages || {};
+  const levels = c.bigfive_levels || {};
+  const domDim = BIGFIVE_DIMS[dom];
+
+  // Sorted list (O/C/E/A/N order is canonical for Big Five)
+  const order = ['O','C','E','A','N'];
+  let dimRows = '';
+  order.forEach(k => {
+    const dim = BIGFIVE_DIMS[k];
+    const p = pcts[k] || 0;
+    const lvl = levels[k] || 'mid';
+    const conclusion = BIGFIVE_CONCLUSIONS[k][lvl];
+    const lvlLabel = lvl === 'low' ? 'Низький' : (lvl === 'mid' ? 'Середній' : 'Високий');
+    dimRows += `<div class="dim-row">
+      <div class="head">
+        <div class="dim-letter" style="background:${dim.color}">${k}</div>
+        <div class="dim-name">${esc(dim.name)}<span class="ua">${esc(dim.ua)}</span></div>
+        <div class="dim-bar"><div class="dim-bar-fill" style="background:${dim.color}; width:${p}%"></div></div>
+        <div class="dim-pct" style="color:${dim.color}">${p}%</div>
+      </div>
+      <div class="dim-conclusion">
+        <span class="level-tag ${lvl}">${lvlLabel}</span><br>
+        ${esc(conclusion)}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('content').innerHTML = `
+    <div class="bf-grid">
+      <div class="dom-card">
+        <div class="dom-letter" style="background:${domDim.color}">${dom}</div>
+        <div class="dom-tag">Домінуючий вимір</div>
+        <div class="dom-name">${esc(domDim.name)}</div>
+        <div class="dom-ua">${esc(domDim.ua)}</div>
+        <span class="dom-pct" style="background:${domDim.color}20; color:${domDim.color}">${pcts[dom]}%</span>
+        <div class="dom-desc">${esc(domDim.short)}</div>
+      </div>
+      <div class="dims-list">
+        <h3>Профіль OCEAN</h3>
+        ${dimRows}
+      </div>
+      <div class="radar-block">
+        ${buildRadar(pcts)}
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3><span class="spark">✦</span> Коротке резюме</h3>
+      <div class="summary-text">${esc(c.bigfive_summary || '')}</div>
+    </div>
+  `;
+}
+
+load();
+</script>
+</body></html>
