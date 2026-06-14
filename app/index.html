@@ -76,8 +76,8 @@
             <th>Кандидат</th>
             <th>Посада</th>
             <th>Вердикт</th>
-            <th>IQ</th>
-            <th>Відтворення</th>
+            <th>Тести пройдені</th>
+            <th>📋 Продуктивність</th>
             <th>🌀 Еннеаграма</th>
             <th>📊 DISC</th>
             <th>🌌 Big Five</th>
@@ -111,11 +111,73 @@ const MAX_SELECT = 5;
 
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function verdictPill(v) {
+// Compute verdict on-the-fly for candidates that don't have it stored yet
+function computeVerdict(c) {
+  if (c.verdict) return { verdict: c.verdict, confidence: c.verdict_confidence };
+  // Fallback to local computation from raw_answers (legacy candidates)
+  const a = c.raw_answers || {};
+  if (!a.agrees_product && !a.product && !a.results) return null;
+  let s = 0;
+  const agrees = (a.agrees_product || '').toLowerCase();
+  if (agrees.includes('так, абсолютно')) s += 2;
+  else if (agrees.startsWith('так') || agrees.startsWith('швидше так')) s += 1;
+  else if (agrees.startsWith('ні')) s -= 1;
+  const prod = (a.product || '').toLowerCase();
+  const thingPat = /(угод|обід|обед|клиент|клієнт|звіт|отчет|прибут|виручк|продаж|меню|страв|сервіс|товар)/;
+  const procPat = /(комуник|коммуник|управл|керую|спілкуван|процес|процесс)/;
+  if (thingPat.test(prod)) s += 2;
+  else if (procPat.test(prod) && !thingPat.test(prod)) s -= 1;
+  else if (prod.length > 15) s += 1;
+  const res = ((a.results||'') + ' ' + (a.achievements||'')).toLowerCase();
+  if (/\d{2,}/.test(res) && /(збільш|увелич|зріс|вирос|оптиміз|оптимиз|прибут)/.test(res)) s += 2;
+  else if (/\d{2,}/.test(res)) s += 1;
+  else if (res.trim().length < 40) s -= 1;
+  const plan = (a.plan_performance||'').toLowerCase();
+  if (plan.startsWith('перевик')) s += 1;
+  else if (plan.startsWith('не завжди') || plan.startsWith('часто не')) s -= 1;
+  let verdict, confidence;
+  if (s >= 5) { verdict = 'Перформер'; confidence = 'висока'; }
+  else if (s >= 2) { verdict = 'Перформер'; confidence = 'помірна'; }
+  else if (s >= 0) { verdict = 'Делатель'; confidence = 'помірна'; }
+  else { verdict = 'Делатель'; confidence = 'висока'; }
+  return { verdict, confidence };
+}
+
+function verdictPill(c) {
+  const v = computeVerdict(c);
   if (!v) return '<span class="empty-cell">—</span>';
-  if (v === 'Перформер') return '<span class="test-pill green">Продуктивний</span>';
-  if (v === 'Делатель')  return '<span class="test-pill red">Виконавець</span>';
-  return '<span class="test-pill gray">' + esc(v) + '</span>';
+  const verdict = v.verdict;
+  const conf = v.confidence;
+  if (verdict === 'Перформер') return '<span class="test-pill green">Продуктивний</span><div style="color:var(--c-muted); font-size:10px; margin-top:2px">впевн.: ' + conf + '</div>';
+  if (verdict === 'Делатель')  return '<span class="test-pill red">Виконавець</span><div style="color:var(--c-muted); font-size:10px; margin-top:2px">впевн.: ' + conf + '</div>';
+  return '<span class="test-pill gray">' + esc(verdict) + '</span>';
+}
+
+function testsStatusCell(c) {
+  const tests = [
+    { done: c.test_status === 'completed' || !!c.raw_answers, icon: '📋', label: 'Прод.' },
+    { done: c.enneagram_type != null,                          icon: '🌀', label: 'Енн.' },
+    { done: !!c.disc_dominant,                                  icon: '📊', label: 'DISC' },
+    { done: !!c.bigfive_dominant,                               icon: '🌌', label: 'BigF.' }
+  ];
+  const completed = tests.filter(t => t.done).length;
+  const total = tests.length;
+  const pillCls = completed === total ? 'green' : (completed === 0 ? 'gray' : 'amber');
+  let icons = tests.map(t => `<span style="font-size:13px; opacity:${t.done ? 1 : 0.25}" title="${t.label}">${t.icon}</span>`).join(' ');
+  return `<div><span class="test-pill ${pillCls}">${completed}/${total}</span><div style="margin-top:4px; display:flex; gap:3px">${icons}</div></div>`;
+}
+
+function mainTestCell(c) {
+  if (!(c.test_status === 'completed' || c.raw_answers)) return '<span class="empty-cell">—</span>';
+  // Show top 3 trait scores from points
+  const pts = c.points || {};
+  const names = { A: 'Стаб.', B: 'Оптим.', C: 'Самов.', D: 'Впевн.', E: 'Енер.', F: 'Напол.', G: 'Відп.', H: 'Прав.', I: 'Чуйн.', J: 'Спілк.' };
+  const arr = Object.keys(pts).filter(k => pts[k]).map(k => ({ k, name: names[k] || k, score: Math.round((pts[k].score + 100) / 20) }))
+    .filter(x => !isNaN(x.score));
+  if (arr.length === 0) return '<span class="test-pill green">✓ Пройдено</span>';
+  arr.sort((a, b) => b.score - a.score);
+  const top3 = arr.slice(0, 3).map(x => `<span style="font-size:11px">${esc(x.name)}: <strong>${x.score}/10</strong></span>`).join('<br>');
+  return `<div>${top3}</div>`;
 }
 
 function iqPill(iq, band) {
@@ -196,9 +258,9 @@ function render() {
       <td class="row-check"><input type="checkbox" data-id="${c.id}" ${isSel ? 'checked' : ''} onclick="event.stopPropagation()"></td>
       <td class="name-cell">${esc(c.name)}</td>
       <td class="pos-cell">${esc(c.position || '—')}</td>
-      <td>${verdictPill(c.verdict)}</td>
-      <td>${iqPill(c.iq, c.iq_band)}</td>
-      <td>${reproPill(c.reproduction, c.reproduction_band)}</td>
+      <td>${verdictPill(c)}</td>
+      <td>${testsStatusCell(c)}</td>
+      <td>${mainTestCell(c)}</td>
       <td>${ennCell(c)}</td>
       <td>${discCell(c)}</td>
       <td>${bfCell(c)}</td>

@@ -211,6 +211,42 @@
       points[t].level = s <= -19 ? 'Низький' : (s < 32 ? 'Середній' : 'Високий');
     });
 
+    // Compute verdict from productivity answers (same logic as candidate.html)
+    const a = prodAnswers;
+    let vScore = 0;
+    const vReasons = [];
+    const agrees = (a.agrees_product || '').toLowerCase();
+    if (agrees.includes('так, абсолютно')) { vScore += 2; vReasons.push('Безумовно погоджується, що кожна посада має продукт'); }
+    else if (agrees.startsWith('швидше так') || agrees.startsWith('так')) { vScore += 1; vReasons.push('Погоджується з концепцією продукту посади'); }
+    else if (agrees.startsWith('ні') || agrees.startsWith('швидше ні')) { vScore -= 1; vReasons.push('Не погоджується з концепцією продукту посади'); }
+
+    const product = (a.product || '').toLowerCase();
+    const thingPat = /(угод|обід|обед|клиент|клієнт|звіт|отчет|прибут|виручк|продаж|подача|меню|страв|обслугов|сервіс|товар|консультац)/;
+    const procPat = /(комуник|коммуник|управл|керую|спілкуван|обовязк|обязанн|процес|процесс)/;
+    if (thingPat.test(product)) { vScore += 2; vReasons.push('Продукт описаний як конкретний результат'); }
+    else if (procPat.test(product) && !thingPat.test(product)) { vScore -= 1; vReasons.push('Продукт описаний як процес, а не результат'); }
+    else if (product.length > 15) { vScore += 1; vReasons.push('Опис продукту присутній'); }
+
+    const res = ((a.results || '') + ' ' + (a.achievements || '')).toLowerCase();
+    const hasNum = /\d{2,}/.test(res);
+    if (hasNum && /(збільш|увелич|зріс|вирос|оптиміз|оптимиз|прибут)/.test(res)) { vScore += 2; vReasons.push('Конкретні цифрові досягнення'); }
+    else if (hasNum) { vScore += 1; vReasons.push('Є кількісні дані у відповідях'); }
+    else if (res.trim().length < 40) { vScore -= 1; vReasons.push('Результати описані абстрактно'); }
+
+    const comp = (a.comparison || '').toLowerCase();
+    if (comp.includes('значно вищ') || comp.includes('дещо вищ')) { vScore += 1; vReasons.push('Оцінює свої результати вище за колег'); }
+    else if (comp.includes('нижч')) { vScore -= 1; vReasons.push('Оцінює свої результати нижче за колег'); }
+
+    const plan = (a.plan_performance || '').toLowerCase();
+    if (plan.startsWith('перевик')) { vScore += 1; vReasons.push('Заявляє про перевиконання плану'); }
+    else if (plan.startsWith('не завжди') || plan.startsWith('часто не')) { vScore -= 1; vReasons.push('Часто не виконує план'); }
+
+    let verdict, verdict_confidence;
+    if (vScore >= 5) { verdict = 'Перформер'; verdict_confidence = 'висока'; }
+    else if (vScore >= 2) { verdict = 'Перформер'; verdict_confidence = 'помірна'; }
+    else if (vScore >= 0) { verdict = 'Делатель'; verdict_confidence = 'помірна'; }
+    else { verdict = 'Делатель'; verdict_confidence = 'висока'; }
+
     // Build payload
     const update = {
       test_status: 'completed',
@@ -218,7 +254,10 @@
       raw_answers: prodAnswers,
       product_self: prodAnswers.product || null,
       points: points,
-      verdict_reasons: ['Тест пройдено через AI-HRconnect ' + new Date().toLocaleString('uk-UA')]
+      verdict: verdict,
+      verdict_confidence: verdict_confidence,
+      verdict_score: vScore,
+      verdict_reasons: vReasons
     };
 
     // Disable button
