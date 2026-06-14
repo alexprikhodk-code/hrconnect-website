@@ -25,25 +25,35 @@
     <div class="app-content">
       <div class="card" style="max-width:600px" id="current"></div>
       <h3 class="mt-6">Тарифи</h3>
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:12px">
-        <div class="card">
-          <strong>FREE</strong>
-          <div style="font-size:32px; font-weight:700; margin:8px 0">0 ₴</div>
-          <div class="muted">2 тести на місяць</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:12px; align-items:stretch">
+        <div class="card" style="display:flex; flex-direction:column">
+          <strong style="color:var(--c-muted)">FREE</strong>
+          <div style="font-size:30px; font-weight:700; margin:8px 0">0 ₴</div>
+          <div class="muted" style="flex:1">2 тести на місяць<br>Базовий аналіз</div>
         </div>
-        <div class="card">
+        <div class="card" style="border:2px solid var(--c-brand); display:flex; flex-direction:column">
           <strong style="color:var(--c-brand)">PRO</strong>
-          <div style="font-size:32px; font-weight:700; margin:8px 0">990 ₴ / міс</div>
-          <div class="muted">50 тестів, повна аналітика</div>
+          <div style="font-size:30px; font-weight:700; margin:8px 0">1990 ₴ <span style="font-size:13px; color:var(--c-muted); font-weight:500">/ міс</span></div>
+          <div class="muted" style="flex:1">50 тестів<br>Повна аналітика + експорт</div>
           <button class="btn btn-primary btn-block mt-4" onclick="alert('Напишіть нам на info@hrconnect — активуємо вручну на 30 днів після оплати.')">Запросити PRO</button>
         </div>
-        <div class="card">
+        <div class="card" style="display:flex; flex-direction:column">
           <strong style="color:var(--c-accent)">ENTERPRISE</strong>
-          <div style="font-size:32px; font-weight:700; margin:8px 0">від 4900 ₴</div>
-          <div class="muted">Безлімітні тести, API, кастомізація</div>
+          <div style="font-size:30px; font-weight:700; margin:8px 0">4990 ₴ <span style="font-size:13px; color:var(--c-muted); font-weight:500">/ міс</span></div>
+          <div class="muted" style="flex:1">Безлімітні тести + API<br>Командний доступ</div>
           <button class="btn btn-accent btn-block mt-4" onclick="alert('Напишіть на info@hrconnect — обговоримо умови.')">Звʼязатись</button>
         </div>
+        <div class="card" style="border:1px dashed var(--c-brand-2); background:#fbfdfe; display:flex; flex-direction:column">
+          <strong style="color:var(--c-brand-2)">КОНСУЛЬТАЦІЯ</strong>
+          <div style="font-size:30px; font-weight:700; margin:8px 0">2000 ₴ <span style="font-size:13px; color:var(--c-muted); font-weight:500">/ година</span></div>
+          <div class="muted" style="flex:1">Особиста консультація:<br>розбір кандидата, кейс, найм</div>
+          <a href="mailto:info@hrconnect.com.ua?subject=Замовити консультацію" class="btn btn-ghost btn-block mt-4" style="border-color:var(--c-brand-2); color:var(--c-brand-2)">Замовити</a>
+        </div>
       </div>
+      <style>
+        @media (max-width: 1100px) { .app-content > div[style*="repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 600px) { .app-content > div[style*="repeat(4"] { grid-template-columns: 1fr !important; } }
+      </style>
     </div>
   </main>
 </div>
