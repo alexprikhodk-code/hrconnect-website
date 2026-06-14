@@ -132,10 +132,10 @@ async function refresh() {
         '<td style="padding:12px 16px; color:var(--c-muted)">' + esc(c.position || '—') + '</td>' +
         '<td style="padding:12px 16px">' + progressHTML + '</td>' +
         '<td style="padding:12px 16px"><div style="display:flex; flex-direction:column; gap:4px">' + 
-  (url ? '<a href="' + url + '" target="_blank" style="font-size:12px">📋 Основний тест</a>' : '') +
-  (ennUrl ? '<a href="' + ennUrl + '" target="_blank" style="font-size:12px">🌀 Еннеаграма</a>' : '') +
-  (discUrl ? '<a href="' + discUrl + '" target="_blank" style="font-size:12px">📊 DISC</a>' : '') +
-  (bfUrl ? '<a href="' + bfUrl + '" target="_blank" style="font-size:12px">🌌 Big Five</a>' : '') +
+  (url ? '<div style="margin-bottom:6px"><a href="' + url + '" target="_blank" style="font-size:12px; font-weight:600">📋 Тест на продуктивність</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">розуміння продукту посади, результати, досягнення</div></div>' : '') +
+  (ennUrl ? '<div style="margin-bottom:6px"><a href="' + ennUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌀 Еннеаграма</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">9 типів особистості — що внутрішньо рухає людиною</div></div>' : '') +
+  (discUrl ? '<div style="margin-bottom:6px"><a href="' + discUrl + '" target="_blank" style="font-size:12px; font-weight:600">📊 DISC</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">стиль робочої поведінки (Dominance/Influence/Steadiness/Conscientiousness)</div></div>' : '') +
+  (bfUrl ? '<div style="margin-bottom:6px"><a href="' + bfUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌌 Big Five</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">5 наукових вимірів OCEAN — найбільш валідована модель</div></div>' : '') +
 '</div></td>' +
         '<td style="padding:12px 16px"><button class="btn btn-ghost" style="padding:5px 12px; font-size:12px" onclick="deleteCand(\'' + c.id + '\')">Видалити</button></td>' +
       '</tr>';
