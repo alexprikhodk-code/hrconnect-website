@@ -88,7 +88,10 @@
   <main class="app-main">
     <div class="app-topbar">
       <div><a href="/app/candidates.html" style="color:var(--c-muted)">← Усі кандидати</a></div>
-      <button class="btn btn-ghost" onclick="deleteCand()" style="color:var(--c-red); border-color:#fde0e0">Видалити кандидата</button>
+      <div style="display:flex; gap:10px">
+        <a id="reportLink" href="#" class="btn btn-primary" style="font-size:13px; padding:8px 16px">⬇ PDF-звіт</a>
+        <button class="btn btn-ghost" onclick="deleteCand()" style="color:var(--c-red); border-color:#fde0e0">Видалити</button>
+      </div>
     </div>
 
     <div class="app-content">
@@ -510,5 +513,7 @@ window.deleteCand = async function () {
 };
 
 load();
+// Update report link after load
+setTimeout(() => { if (candidateId) document.getElementById('reportLink').href = '/app/report.html?id=' + candidateId; }, 100);
 </script>
 </body></html>

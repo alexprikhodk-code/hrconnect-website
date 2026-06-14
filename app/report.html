@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Звіт по кандидату — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+body { background: #f0f2f5; }
+.report-toolbar { background: white; padding: 14px 24px; border-bottom: 1px solid var(--c-line); position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; }
+.report-toolbar a { color: var(--c-muted); }
+.dl-btn { background: var(--c-accent); color: white; padding: 10px 22px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.dl-btn:hover { background: #B45309; }
+.dl-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* A4 page — 794x1123 px @ 96dpi */
+.report-page {
+  width: 794px;
+  margin: 24px auto;
+  background: white;
+  padding: 48px 56px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #1a2332;
+}
+
+.r-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 2px solid #1f4e78; margin-bottom: 24px; }
+.r-header .logo-line { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: #1f4e78; }
+.r-header .meta { text-align: right; font-size: 11px; color: #64748b; }
+.r-title { font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #0f172a; }
+.r-subtitle { font-size: 14px; color: #475569; margin: 0 0 18px; }
+
+.r-section { margin-bottom: 22px; page-break-inside: avoid; }
+.r-section h2 { font-size: 14px; color: #1f4e78; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1.5px solid #e4e8ee; font-weight: 700; }
+.r-section h3 { font-size: 13px; margin: 14px 0 8px; font-weight: 700; color: #0f172a; }
+
+.r-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.r-info-cell { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+.r-info-cell .l { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.r-info-cell .v { font-weight: 600; font-size: 13px; margin-top: 3px; }
+
+.r-verdict { padding: 18px 22px; border-radius: 12px; display: flex; gap: 14px; align-items: center; }
+.r-verdict.green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #6ee7b7; }
+.r-verdict.amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fbbf24; }
+.r-verdict.red { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5; }
+.r-verdict .icon { font-size: 32px; }
+.r-verdict .text { flex: 1; }
+.r-verdict .title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.r-verdict .desc { font-size: 12px; line-height: 1.5; }
+
+.tag-row { margin-top: 10px; }
+.r-tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 600; margin: 3px 4px 0 0; }
+.r-tag.red { background: #fee2e2; color: #991b1b; }
+.r-tag.green { background: #dcfce7; color: #166534; }
+
+.r-trait { padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.r-trait:last-child { border-bottom: none; }
+.r-trait .head { display: grid; grid-template-columns: 1fr 60px 60px; gap: 10px; align-items: center; }
+.r-trait .name { font-weight: 600; font-size: 12px; }
+.r-trait .name .short { color: #64748b; font-weight: 400; font-size: 11px; }
+.r-trait .dots-row { display: flex; gap: 3px; }
+.r-trait .dot { width: 14px; height: 6px; border-radius: 999px; background: #e2e8f0; }
+.r-trait .dot.red { background: #ef4444; }
+.r-trait .dot.yellow { background: #eab308; }
+.r-trait .dot.green { background: #22c55e; }
+.r-trait .pct { font-weight: 700; font-size: 13px; text-align: right; }
+.r-trait .lvl-pill { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; text-align: center; }
+.r-trait .lvl-pill.Низький { background: #fee2e2; color: #b91c1c; }
+.r-trait .lvl-pill.Середній { background: #fef3c7; color: #b45309; }
+.r-trait .lvl-pill.Високий { background: #dcfce7; color: #166534; }
+.r-trait .conclusion { font-size: 11px; color: #475569; line-height: 1.5; margin-top: 6px; padding: 6px 10px; background: #f9fbfd; border-left: 2px solid #2e7d8f; border-radius: 4px; }
+
+.r-test-summary { background: #f8fafc; border-radius: 10px; padding: 14px 18px; margin-bottom: 12px; display: flex; gap: 14px; align-items: center; }
+.r-test-summary .icon-circle { width: 48px; height: 48px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; }
+.r-test-summary .name { font-weight: 700; font-size: 14px; }
+.r-test-summary .ua { color: #64748b; font-size: 11px; }
+.r-test-summary .pct { margin-left: auto; font-weight: 700; font-size: 18px; color: #1f4e78; }
+
+.r-mini-row { display: grid; grid-template-columns: 1fr 80px 50px; gap: 10px; align-items: center; padding: 6px 0; font-size: 11px; }
+.r-mini-row .mini-bar { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.r-mini-row .mini-bar > div { height: 100%; border-radius: 999px; }
+.r-mini-row .pct { text-align: right; font-weight: 700; }
+
+.r-answer { padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+.r-answer:last-child { border-bottom: none; }
+.r-answer .q { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; font-weight: 600; }
+.r-answer .a { font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; }
+
+.r-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e4e8ee; text-align: center; color: #94a3b8; font-size: 10px; }
+
+@media print {
+  .report-toolbar { display: none; }
+  body { background: white; }
+  .report-page { box-shadow: none; margin: 0; }
+}
+</style>
+</head>
+<body>
+<div class="report-toolbar">
+  <a href="#" id="backLink">← Назад</a>
+  <button class="dl-btn" id="dlBtn" onclick="downloadPDF()">⬇ Завантажити PDF</button>
+</div>
+
+<div id="report" class="report-page">
+  <div style="text-align: center; padding: 60px 0; color: #64748b">Завантаження...</div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/test/enneagram/questions.js"></script>
+<script src="/test/disc/questions.js"></script>
+<script src="/test/bigfive/questions.js"></script>
+<script>
+const POINT_ORDER = ['A','B','C','D','E','F','G','H','I','J'];
+const TRAITS = {
+  A: { name: 'Стабільність',          short: 'концентрація, увага, порядок, планування' },
+  B: { name: 'Оптимізм',               short: 'позитивний фокус, пошук рішень' },
+  C: { name: 'Самоволодіння',          short: 'спокій під тиском' },
+  D: { name: 'Впевненість',            short: 'передбачуваність, обдуманість рішень' },
+  E: { name: 'Енергія',                short: 'активність, ініціатива, готовність до викликів' },
+  F: { name: 'Наполегливість',         short: 'доведення справ до кінця' },
+  G: { name: 'Відповідальність',       short: 'здатність бути причиною результату' },
+  H: { name: 'Правильність оцінки',    short: "об'єктивність, терпимість до інших точок зору" },
+  I: { name: 'Чуйність',               short: 'готовність допомагати, довіра до людей' },
+  J: { name: 'Спілкування',            short: 'легкість контакту, ясність мови' }
+};
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function score10(raw) {
+  if (raw == null) return null;
+  return Math.max(1, Math.min(10, Math.round((raw + 100) / 20)));
+}
+function levelOf(s10) {
+  if (s10 == null) return '';
+  if (s10 <= 3) return 'Низький';
+  if (s10 <= 6) return 'Середній';
+  return 'Високий';
+}
+function colorOf(s10) {
+  if (s10 <= 3) return 'red';
+  if (s10 <= 6) return 'yellow';
+  return 'green';
+}
+
+function computeVerdict(c) {
+  if (c.verdict) return { verdict: c.verdict, confidence: c.verdict_confidence || 'попередня', reasons: c.verdict_reasons || [] };
+  const a = c.raw_answers || {};
+  let s = 0; const reasons = [];
+  const agrees = (a.agrees_product || '').toLowerCase();
+  if (agrees.includes('так, абсолютно')) { s += 2; reasons.push('Безумовно погоджується з концепцією продукту посади'); }
+  else if (agrees.startsWith('так') || agrees.startsWith('швидше так')) { s += 1; reasons.push('Погоджується з концепцією продукту посади'); }
+  const prod = (a.product || '').toLowerCase();
+  if (/(угод|обід|обед|клиент|клієнт|звіт|отчет|прибут|виручк|продаж|меню|страв|сервіс|товар)/.test(prod)) { s += 2; reasons.push('Продукт описаний як конкретний результат'); }
+  const res = ((a.results||'')+' '+(a.achievements||'')).toLowerCase();
+  if (/\d{2,}/.test(res) && /(збільш|увелич|зріс|вирос|оптиміз|оптимиз|прибут)/.test(res)) { s += 2; reasons.push('Конкретні цифрові досягнення'); }
+  else if (/\d{2,}/.test(res)) { s += 1; reasons.push('Є кількісні дані у відповідях'); }
+  let verdict, confidence;
+  if (s >= 5) { verdict = 'Перформер'; confidence = 'висока'; }
+  else if (s >= 2) { verdict = 'Перформер'; confidence = 'помірна'; }
+  else if (s >= 0) { verdict = 'Делатель'; confidence = 'помірна'; }
+  else { verdict = 'Делатель'; confidence = 'висока'; }
+  return { verdict, confidence, reasons };
+}
+
+function computeHireRec(c, v) {
+  const points = c.points || {};
+  const risks = []; const strengths = [];
+  const lvl = (code) => { const p = points[code]; if (!p) return null; const s10 = score10(p.score); return levelOf(s10); };
+  if (lvl('B') === 'Низький') risks.push('низький Оптимізм (B)');
+  if (lvl('G') === 'Низький') risks.push('низька Відповідальність (G)');
+  if (lvl('H') === 'Низький') risks.push('низька Правильність оцінки (H)');
+  if (lvl('C') === 'Низький') risks.push('низьке Самоволодіння (C)');
+  if (lvl('F') === 'Низький') risks.push('низька Наполегливість (F)');
+  if (lvl('A') === 'Високий') strengths.push('висока Стабільність (A)');
+  if (lvl('G') === 'Високий') strengths.push('висока Відповідальність (G)');
+  if (lvl('F') === 'Високий') strengths.push('висока Наполегливість (F)');
+  if (lvl('E') === 'Високий') strengths.push('висока Енергія (E)');
+  if (v.verdict === 'Перформер') strengths.push('бачить продукт посади');
+
+  const isPerf = v.verdict === 'Перформер';
+  const isHigh = v.confidence === 'висока';
+  let rec, cls;
+  if (isPerf && isHigh && risks.length <= 1) { rec = 'Рекомендовано до найму'; cls = 'green'; }
+  else if (isPerf && risks.length <= 2) { rec = 'Рекомендовано з застереженнями'; cls = 'amber'; }
+  else if (isPerf && risks.length >= 3) { rec = 'Розглядати тільки на виконавчу позицію'; cls = 'amber'; }
+  else if (!isPerf && risks.length <= 1) { rec = 'Розглядати на виконавчу роль з наглядом'; cls = 'amber'; }
+  else { rec = 'НЕ рекомендовано до найму'; cls = 'red'; }
+  return { rec, cls, risks, strengths };
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { document.getElementById('report').innerHTML = '<p>Не вказано id.</p>'; return; }
+  await requireAuth();
+  document.getElementById('backLink').href = '/app/candidate.html?id=' + id;
+  const { data, error } = await sb.from('candidates').select('*').eq('id', id).maybeSingle();
+  if (error || !data) { document.getElementById('report').innerHTML = '<p>Не знайдено.</p>'; return; }
+  render(data);
+}
+
+function render(c) {
+  const v = computeVerdict(c);
+  const hire = computeHireRec(c, v);
+  const date = new Date().toLocaleDateString('uk-UA');
+  const completedDate = c.test_completed_at ? new Date(c.test_completed_at).toLocaleDateString('uk-UA') : '—';
+
+  // Brand SVG logo
+  const logoSvg = `<svg width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="14" fill="#1f4e78"/>
+    <text x="32" y="29" font-family="Arial, sans-serif" font-weight="800" font-size="22" fill="white" text-anchor="middle" letter-spacing="-1">HR</text>
+    <circle cx="32" cy="42" r="3" fill="#2e7d8f"/>
+    <text x="32" y="56" font-family="Arial, sans-serif" font-weight="500" font-size="9" fill="#a3c4dc" text-anchor="middle" letter-spacing="2">CONNECT</text>
+  </svg>`;
+
+  let html = `
+    <div class="r-header">
+      <div class="logo-line">${logoSvg}<span>AI-HRconnect</span></div>
+      <div class="meta">Звіт сформовано<br><strong>${date}</strong></div>
+    </div>
+
+    <h1 class="r-title">${esc(c.name)}</h1>
+    <p class="r-subtitle">${esc(c.position || 'Посада не вказана')}</p>
+
+    <div class="r-section">
+      <div class="r-info-grid">
+        <div class="r-info-cell"><div class="l">Email</div><div class="v">${esc(c.email || '—')}</div></div>
+        <div class="r-info-cell"><div class="l">Телефон</div><div class="v">${esc(c.phone || '—')}</div></div>
+        <div class="r-info-cell"><div class="l">Вік</div><div class="v">${c.age || '—'}</div></div>
+        <div class="r-info-cell"><div class="l">Стать</div><div class="v">${esc(c.sex || '—')}</div></div>
+      </div>
+    </div>
+
+    <div class="r-section">
+      <h2>Підсумкова рекомендація</h2>
+      <div class="r-verdict ${hire.cls}">
+        <div class="icon">${hire.cls==='green'?'✓':(hire.cls==='red'?'✗':'⚠')}</div>
+        <div class="text">
+          <div class="title">${esc(hire.rec)}</div>
+          <div class="desc">Вердикт продуктивності: <strong>${v.verdict === 'Перформер' ? 'Продуктивний та ефективний' : 'Виконавець'}</strong> (впевненість: ${esc(v.confidence)})</div>
+          ${hire.strengths.length ? '<div class="tag-row"><strong>Сильні сторони:</strong> ' + hire.strengths.map(s=>'<span class="r-tag green">+ '+esc(s)+'</span>').join('') + '</div>' : ''}
+          ${hire.risks.length ? '<div class="tag-row"><strong>Ризики:</strong> ' + hire.risks.map(r=>'<span class="r-tag red">! '+esc(r)+'</span>').join('') + '</div>' : ''}
+        </div>
+      </div>
+    </div>`;
+
+  // Main test — traits
+  const hasMain = c.points && Object.keys(c.points).length > 0;
+  if (hasMain) {
+    const traits = POINT_ORDER.map(code => {
+      const p = c.points[code];
+      if (!p) return null;
+      const s10 = score10(p.score);
+      const level = levelOf(s10);
+      return { code, s10, level, color: colorOf(s10) };
+    }).filter(Boolean).sort((a,b) => a.s10 - b.s10);
+
+    html += `<div class="r-section">
+      <h2>Особистісні риси · бали з 10</h2>
+      <p style="font-size:11px; color:#64748b; margin:0 0 10px">Сортовано від найслабшої риси до найсильнішої.</p>`;
+    traits.forEach(t => {
+      const dots = [];
+      for (let k = 1; k <= 10; k++) {
+        dots.push(`<span class="dot${k <= t.s10 ? ' ' + t.color : ''}"></span>`);
+      }
+      html += `<div class="r-trait">
+        <div class="head">
+          <div class="name">${esc(TRAITS[t.code].name)} <span class="short">— ${esc(TRAITS[t.code].short)}</span></div>
+          <div class="dots-row">${dots.join('')}</div>
+          <div style="text-align:right"><strong>${t.s10}/10</strong><br><span class="lvl-pill ${t.level}">${t.level}</span></div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Productivity answers
+  if (c.raw_answers && Object.keys(c.raw_answers).length > 0) {
+    const a = c.raw_answers;
+    const labels = {
+      agrees_product: 'Згода з концепцією продукту посади',
+      explanation: 'Пояснення концепту',
+      position: 'Посада',
+      product: 'Особистий продукт',
+      results: 'Опис результатів',
+      achievements: 'Досягнення',
+      comparison: 'Порівняння з колегами',
+      plan_performance: 'Виконання плану'
+    };
+    html += `<div class="r-section">
+      <h2>Відповіді кандидата · продуктивність</h2>`;
+    Object.keys(labels).forEach(k => {
+      if (a[k]) html += `<div class="r-answer"><div class="q">${labels[k]}</div><div class="a">${esc(a[k])}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Enneagram
+  if (c.enneagram_type) {
+    const t = ENNEAGRAM_TYPES[c.enneagram_type];
+    const pcts = c.enneagram_percentages || {};
+    html += `<div class="r-section">
+      <h2>🌀 Еннеаграма особистості</h2>
+      <div class="r-test-summary">
+        <div class="icon-circle" style="background:${t.color}">${c.enneagram_type}</div>
+        <div>
+          <div class="name">Тип ${c.enneagram_type}: ${esc(t.name)}</div>
+          <div class="ua">${esc(t.short)}</div>
+        </div>
+        <div class="pct">${pcts[c.enneagram_type]}%</div>
+      </div>`;
+    Object.keys(pcts).map(k => ({ k: +k, p: pcts[k] })).sort((a,b) => b.p - a.p).forEach(({k, p}) => {
+      const tt = ENNEAGRAM_TYPES[k];
+      html += `<div class="r-mini-row">
+        <div><strong>${k}. ${esc(tt.name)}</strong> <span style="color:#64748b">— ${esc(tt.short)}</span></div>
+        <div class="mini-bar"><div style="background:${tt.color}; width:${p}%"></div></div>
+        <div class="pct">${p}%</div>
+      </div>`;
+    });
+    if (c.enneagram_summary) html += `<div style="margin-top:12px; padding:10px 14px; background:#f9fbfd; border-left:3px solid #2e7d8f; border-radius:6px; font-size:11.5px; line-height:1.5">${esc(c.enneagram_summary)}</div>`;
+    html += `</div>`;
+  }
+
+  // DISC
+  if (c.disc_dominant) {
+    const st = DISC_STYLES[c.disc_dominant];
+    const pcts = c.disc_percentages || {};
+    html += `<div class="r-section">
+      <h2>📊 DISC · стиль робочої поведінки</h2>
+      <div class="r-test-summary">
+        <div class="icon-circle" style="background:${st.color}; border-radius:10px">${c.disc_profile || c.disc_dominant}</div>
+        <div>
+          <div class="name">${esc(st.name)} · ${esc(st.ua)}</div>
+          <div class="ua">${esc(st.short)}</div>
+        </div>
+        <div class="pct">${pcts[c.disc_dominant]}%</div>
+      </div>`;
+    ['D','I','S','C'].forEach(k => {
+      const s = DISC_STYLES[k];
+      const p = pcts[k] || 0;
+      html += `<div class="r-mini-row">
+        <div><strong>${k}</strong> · ${esc(s.ua)} <span style="color:#64748b">— ${esc(s.short)}</span></div>
+        <div class="mini-bar"><div style="background:${s.color}; width:${p}%"></div></div>
+        <div class="pct">${p}%</div>
+      </div>`;
+    });
+    if (c.disc_summary) html += `<div style="margin-top:12px; padding:10px 14px; background:#f9fbfd; border-left:3px solid #2e7d8f; border-radius:6px; font-size:11.5px; line-height:1.5">${esc(c.disc_summary)}</div>`;
+    html += `</div>`;
+  }
+
+  // Big Five
+  if (c.bigfive_dominant) {
+    const dim = BIGFIVE_DIMS[c.bigfive_dominant];
+    const pcts = c.bigfive_percentages || {};
+    html += `<div class="r-section">
+      <h2>🌌 Big Five · 5 наукових вимірів</h2>
+      <div class="r-test-summary">
+        <div class="icon-circle" style="background:${dim.color}; border-radius:10px">${c.bigfive_dominant}</div>
+        <div>
+          <div class="name">${esc(dim.name)} · ${esc(dim.ua)}</div>
+          <div class="ua">${esc(dim.short)}</div>
+        </div>
+        <div class="pct">${pcts[c.bigfive_dominant]}%</div>
+      </div>`;
+    ['O','C','E','A','N'].forEach(k => {
+      const d = BIGFIVE_DIMS[k];
+      const p = pcts[k] || 0;
+      html += `<div class="r-mini-row">
+        <div><strong>${k}</strong> · ${esc(d.ua)} <span style="color:#64748b">— ${esc(d.short)}</span></div>
+        <div class="mini-bar"><div style="background:${d.color}; width:${p}%"></div></div>
+        <div class="pct">${p}%</div>
+      </div>`;
+    });
+    if (c.bigfive_summary) html += `<div style="margin-top:12px; padding:10px 14px; background:#f9fbfd; border-left:3px solid #2e7d8f; border-radius:6px; font-size:11.5px; line-height:1.5">${esc(c.bigfive_summary)}</div>`;
+    html += `</div>`;
+  }
+
+  html += `<div class="r-footer">Звіт сформовано платформою AI-HRconnect · ${date} · конфіденційно</div>`;
+
+  document.getElementById('report').innerHTML = html;
+  document.title = 'Звіт — ' + c.name;
+}
+
+window.downloadPDF = function () {
+  const btn = document.getElementById('dlBtn');
+  btn.disabled = true; btn.textContent = '⏳ Готую PDF...';
+  const el = document.getElementById('report');
+  const candidateName = document.title.replace('Звіт — ', '').trim() || 'candidate';
+  const fileName = 'AI-HRconnect_' + candidateName.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0,10) + '.pdf';
+  html2pdf().set({
+    margin: 0,
+    filename: fileName,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait', hotfixes: ['px_scaling'] },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  }).from(el).save().then(() => {
+    btn.disabled = false; btn.textContent = '⬇ Завантажити PDF';
+  }).catch(err => {
+    console.error(err);
+    btn.disabled = false; btn.textContent = '⬇ Завантажити PDF';
+    alert('Помилка генерації PDF. Спробуйте ще раз.');
+  });
+};
+
+load();
+</script>
+</body></html>
