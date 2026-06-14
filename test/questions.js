@@ -70,8 +70,8 @@ window.PRODUCTIVITY_QUESTIONS = [
   }
 ];
 
-// Personality: 20 yes/no statements covering 10 traits (2 per trait)
-// Original wording. Scored simply: each yes/no maps to a trait delta in test.js.
+// Personality: 20 так/ні statements covering 10 traits (2 per trait)
+// Original wording. Scored simply: each так/ні maps to a trait delta in test.js.
 window.PERSONALITY_QUESTIONS = [
   // A — Стабільність (фокус, порядок)
   { key: "A1", trait: "A", direction: 1, label: "Я планую свій робочий день і дотримуюсь плану більшість часу." },

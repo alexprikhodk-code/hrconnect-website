@@ -214,6 +214,8 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://hrconnect-website.vercel.app/og-image.png">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
 </head>
 <body>
 
@@ -227,6 +229,7 @@
       <a href="#faq">FAQ</a>
     </div>
     <div class="topnav-cta">
+      <button onclick="openQuestionModal()" class="btn btn-ghost" style="border-color:var(--c-accent); color:var(--c-accent)">💬 Задай питання</button>
       <a href="/login.html" class="btn btn-ghost">Увійти</a>
       <a href="/register.html" class="btn btn-primary">Спробувати безкоштовно</a>
     </div>
@@ -319,7 +322,7 @@
         <div class="test-icon" style="background:#dbeafe">📋</div>
         <h3>Тест на продуктивність</h3>
         <p class="muted">Чи бачить людина продукт своєї посади та чи має конкретні результати</p>
-        <div class="test-meta">⏱ 15-20 хв · 13 питань + 20 yes/no</div>
+        <div class="test-meta">⏱ 15-20 хв · 13 питань + 20 так/ні</div>
       </div>
       <div class="test-card" data-test="enneagram">
         <div class="test-icon" style="background:#ede9fe">🌀</div>
@@ -420,31 +423,28 @@
     <div>
       <div id="footerLogo" style="display:flex; align-items:center; gap:10px; margin-bottom:14px; color:white; font-weight:700; font-size:18px"></div>
       <p style="color:#9eb2c5; font-size:14px; line-height:1.6; margin:0 0 18px">AI-платформа тестування кандидатів. Відсіювайте нерезультативних до співбесіди.</p>
-      <div class="contact-row"><span class="icon">📞</span> <a href="tel:+380000000000">+380 (XX) XXX XX XX</a></div>
       <div class="contact-row"><span class="icon">✉</span> <a href="mailto:info@hrconnect.com.ua">info@hrconnect.com.ua</a></div>
       <div class="contact-row"><span class="icon">💬</span> <a href="https://t.me/" target="_blank">Telegram: @hrconnect</a></div>
-      <div class="contact-row"><span class="icon">📅</span> <a href="#" style="color:var(--c-accent)">Записатись на демо</a></div>
+      <div class="contact-row"><span class="icon">📅</span> <a href="/register.html" style="color:var(--c-accent)">Записатись на демо</a></div>
     </div>
     <div>
       <h4>Продукт</h4>
       <a href="#features">Можливості</a>
       <a href="#tests">Тести</a>
       <a href="#pricing">Тарифи</a>
-      <a href="#faq">Демо</a>
+      <a href="/register.html">Демо</a>
     </div>
     <div>
       <h4>Компанія</h4>
       <a href="#">Про нас</a>
       <a href="#">Блог</a>
       <a href="#">Партнерам</a>
-      <a href="#">Контакти</a>
+      <a href="javascript:openQuestionModal()">Контакти</a>
     </div>
     <div>
       <h4>Для партнерів</h4>
-      <a href="#">Бріф для онбордингу</a>
-      <a href="#">FAQ</a>
-      <a href="#">Документація</a>
-      <a href="#">Політика конфіденційності</a>
+      <a href="#faq">FAQ</a>
+      <a href="/privacy.html">Політика конфіденційності</a>
     </div>
   </div>
   <div class="footer-bottom">
@@ -464,10 +464,10 @@ const TEST_DETAILS = {
   productivity: {
     icon: "📋", color: "#1f4e78",
     title: "Тест на продуктивність",
-    meta: "15-20 хвилин · 13 відкритих питань + 20 yes/no тверджень",
+    meta: "15-20 хвилин · 13 відкритих питань + 20 так/ні тверджень",
     sections: [
       ["Що вимірює", "<p>Найвичерпніший тест системи. Розкладає кандидата на дві площини: (1) розуміння власного <strong>продукту посади</strong> і наявність <strong>конкретних результатів</strong>, (2) 10 рис особистості, що впливають на роботу.</p>"],
-      ["Що відбувається у тесті", "<ul><li>Кандидат відповідає на питання про концепцію «продукту посади» та чому з нею погоджується/не погоджується</li><li>Описує свою поточну/останню посаду та власний особистий «продукт» — те, що він виробляє для компанії</li><li>Наводить конкретні результати з цифрами (виторг, % клієнтів, обсяг виробництва тощо)</li><li>Порівнює себе з колегами на аналогічних позиціях</li><li>Заявляє про виконання/невиконання плану</li><li>Перераховує 2-3 досягнення, якими пишається</li><li>Відповідає на 20 yes/no тверджень, що вимірюють 10 рис: <strong>Стабільність, Оптимізм, Самоволодіння, Впевненість, Енергія, Наполегливість, Відповідальність, Правильність оцінки, Чуйність, Спілкування</strong></li></ul>"],
+      ["Що відбувається у тесті", "<ul><li>Кандидат відповідає на питання про концепцію «продукту посади» та чому з нею погоджується/не погоджується</li><li>Описує свою поточну/останню посаду та власний особистий «продукт» — те, що він виробляє для компанії</li><li>Наводить конкретні результати з цифрами (виторг, % клієнтів, обсяг виробництва тощо)</li><li>Порівнює себе з колегами на аналогічних позиціях</li><li>Заявляє про виконання/невиконання плану</li><li>Перераховує 2-3 досягнення, якими пишається</li><li>Відповідає на 20 так/ні тверджень, що вимірюють 10 рис: <strong>Стабільність, Оптимізм, Самоволодіння, Впевненість, Енергія, Наполегливість, Відповідальність, Правильність оцінки, Чуйність, Спілкування</strong></li></ul>"],
       ["Що отримує HR", "<ul><li><strong>Вердикт:</strong> «Продуктивний та ефективний» або «Виконавець» з впевненістю (висока/помірна)</li><li><strong>Рекомендація:</strong> Рекомендовано до співбесіди + найму / з застереженнями / лише виконавча роль / НЕ рекомендовано</li><li><strong>10 рис</strong> з балами 1-10, відсортовано від найслабшої до найсильнішої з розгорнутим описом кожної</li><li>Сильні сторони і ризики у вигляді кольорових бейджів</li><li>Усі текстові відповіді кандидата на блок продуктивності</li></ul>"]
     ]
   },
@@ -548,6 +548,99 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeTestModal();
+});
+</script>
+
+<div id="questionModal" class="test-modal" onclick="if(event.target===this)closeQuestionModal()">
+  <div class="test-modal-inner" style="max-width:520px">
+    <button class="test-modal-close" onclick="closeQuestionModal()">×</button>
+    <h2 style="font-size:22px; margin:0 0 6px">💬 Задайте нам питання</h2>
+    <p style="color:var(--c-muted); font-size:14px; margin:0 0 22px">Відповідаємо протягом 24 годин у робочі дні</p>
+    <form id="questionForm" onsubmit="submitQuestion(event)">
+      <div class="form-group">
+        <label class="form-label">Імʼя *</label>
+        <input type="text" class="form-input" id="qName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Посада</label>
+        <input type="text" class="form-input" id="qPosition" placeholder="HR, керівник, СEO тощо">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Телефон</label>
+        <input type="tel" class="form-input" id="qPhone" placeholder="+380...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-input" id="qEmail" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ваше питання *</label>
+        <textarea class="form-input" id="qText" rows="4" required placeholder="Опишіть, що вас цікавить — тарифи, методики, інтеграція, кастомізація..."></textarea>
+      </div>
+      <div id="qStatus" style="font-size:13px; margin-bottom:12px; min-height:18px"></div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="qSubmit">Надіслати →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openQuestionModal() {
+  document.getElementById('questionModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('qName').focus(), 100);
+}
+function closeQuestionModal() {
+  document.getElementById('questionModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function submitQuestion(e) {
+  e.preventDefault();
+  const status = document.getElementById('qStatus');
+  const btn = document.getElementById('qSubmit');
+  status.style.color = 'var(--c-muted)';
+  status.textContent = 'Надсилаю...';
+  btn.disabled = true;
+
+  const payload = {
+    name: document.getElementById('qName').value.trim(),
+    position: document.getElementById('qPosition').value.trim(),
+    phone: document.getElementById('qPhone').value.trim(),
+    email: document.getElementById('qEmail').value.trim(),
+    question: document.getElementById('qText').value.trim()
+  };
+
+  try {
+    // Call Supabase Edge Function (must be configured separately)
+    const SUPABASE_URL = window.HRC_CONFIG?.SUPABASE_URL || 'https://tfxodvhqlilqlfviosxx.supabase.co';
+    const ANON_KEY = window.HRC_CONFIG?.SUPABASE_ANON_KEY || '';
+    const res = await fetch(SUPABASE_URL + '/functions/v1/send-question', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + ANON_KEY,
+        'apikey': ANON_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    status.style.color = 'var(--c-green)';
+    status.textContent = '✓ Дякуємо! Ваше питання надіслано. Ми відповімо протягом 24 годин.';
+    document.getElementById('questionForm').reset();
+    setTimeout(closeQuestionModal, 2500);
+  } catch (err) {
+    status.style.color = 'var(--c-red)';
+    status.textContent = '✗ Не вдалось надіслати. Напишіть на info@hrconnect.com.ua';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeQuestionModal();
+  }
 });
 </script>
 </body>
