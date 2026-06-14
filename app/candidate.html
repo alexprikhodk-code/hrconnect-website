@@ -29,24 +29,24 @@
 .section { background: white; border-radius: 14px; padding: 22px 26px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
 .section h2 { margin: 0 0 14px; font-size: 18px; }
 
-.point-row { display: grid; grid-template-columns: 28px 140px 1fr 80px 90px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--c-line); }
-.point-row:last-child { border-bottom: none; }
-.point-row .code { font-weight: 700; color: var(--c-brand); font-size: 16px; }
-.point-row .label { font-weight: 600; }
-.point-row .bar { height: 10px; background: #e2e8f0; border-radius: 999px; position: relative; overflow: hidden; }
-.point-row .bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
-.point-row .bar-fill.low { background: var(--c-red); }
-.point-row .bar-fill.mid { background: var(--c-yellow); }
-.point-row .bar-fill.high { background: var(--c-green); }
-.point-row .score { text-align: right; font-weight: 700; }
-.point-row .level-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-align: center; }
-.point-row .level-badge.Низький { background: var(--c-red); color: var(--c-red-ink); }
-.point-row .level-badge.Середній { background: var(--c-yellow); color: var(--c-yellow-ink); }
-.point-row .level-badge.Високий { background: var(--c-green); color: var(--c-green-ink); }
-.point-row .level-badge.ambiguous { background: #f1f5f9; color: var(--c-muted); }
-.point-conclusion { padding: 8px 0 14px 168px; color: #475569; font-size: 13px; line-height: 1.5; border-bottom: 1px solid var(--c-line); }
-.point-row + .point-conclusion { border-bottom: 1px solid var(--c-line); margin-top: -1px; }
-.point-row { border-bottom: none !important; padding-bottom: 6px !important; }
+.trait-card { padding: 16px 0; border-bottom: 1px solid var(--c-line); }
+.trait-card:last-child { border-bottom: none; }
+.trait-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+.trait-title { font-size: 15px; line-height: 1.4; }
+.trait-title strong { color: var(--c-brand); font-weight: 800; font-size: 16px; }
+.trait-short { color: var(--c-muted); font-weight: 400; font-size: 14px; }
+.trait-conclusion { color: #475569; font-size: 13.5px; line-height: 1.55; margin-top: 10px; padding: 10px 14px; background: #f9fbfd; border-left: 3px solid var(--c-brand-2); border-radius: 6px; }
+.dots-row { display: flex; gap: 5px; }
+.dot { width: 22px; height: 8px; border-radius: 999px; background: #e2e8f0; transition: background .15s; }
+.dot.empty { background: #e2e8f0; }
+.dot.red { background: var(--c-red); }
+.dot.amber { background: #f59e0b; }
+.dot.green { background: var(--c-green); }
+.level-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-align: center; display: inline-block; flex-shrink: 0; }
+.level-badge.Низький { background: var(--c-red); color: var(--c-red-ink); }
+.level-badge.Середній { background: var(--c-yellow); color: var(--c-yellow-ink); }
+.level-badge.Високий { background: var(--c-green); color: var(--c-green-ink); }
+.level-badge.ambiguous { background: #f1f5f9; color: var(--c-muted); }
 
 .hire-rec { padding: 18px 22px; border-radius: 12px; margin-bottom: 18px; display: flex; gap: 16px; align-items: start; }
 .hire-rec.green { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #6ee7b7; }
@@ -117,18 +117,31 @@ const PRODUCTIVITY_LABELS = {
   achievements: 'Досягнення'
 };
 
-const TRAIT_DEFINITIONS = {
-  A: 'Стабільність — концентрація, порядок, дотримання планів',
-  B: 'Оптимізм — позитивний фокус, пошук рішень',
-  C: 'Самоволодіння — спокій під тиском',
-  D: 'Впевненість — передбачуваність, обдуманість рішень',
-  E: 'Активність — енергія, ініціатива, готовність до викликів',
-  F: 'Наполегливість — доведення справ до кінця',
-  G: "Відповідальність — здатність бути причиною результату",
-  H: "Правильність оцінки — об'єктивність, терпимість до інших точок зору",
-  I: 'Чуйність — готовність допомагати, довіра до людей',
-  J: 'Спілкування — легкість контакту, ясність мови'
+const TRAITS = {
+  A: { name: 'Стабільність',          short: 'концентрація, увага, порядок, планування' },
+  B: { name: 'Оптимізм',               short: 'позитивний фокус, пошук рішень' },
+  C: { name: 'Самоволодіння',          short: 'спокій під тиском' },
+  D: { name: 'Впевненість',            short: 'передбачуваність, обдуманість рішень' },
+  E: { name: 'Енергія',                short: 'активність, ініціатива, готовність до викликів' },
+  F: { name: 'Наполегливість',         short: 'доведення справ до кінця' },
+  G: { name: 'Відповідальність',       short: 'здатність бути причиною результату' },
+  H: { name: 'Правильність оцінки',    short: "об'єктивність, терпимість до інших точок зору" },
+  I: { name: 'Чуйність',               short: 'готовність допомагати, довіра до людей' },
+  J: { name: 'Спілкування',            short: 'легкість контакту, ясність мови' }
 };
+
+// Score conversion: -100..+100 → 1..10
+function score10(rawScore) {
+  if (rawScore == null) return null;
+  const v = Math.round((rawScore + 100) / 20);
+  return Math.max(1, Math.min(10, v));
+}
+function levelFromScore10(s10, ambiguous) {
+  if (ambiguous) return 'Невизначено';
+  if (s10 <= 3) return 'Низький';
+  if (s10 <= 6) return 'Середній';
+  return 'Високий';
+}
 
 const POINT_ORDER = ['A','B','C','D','E','F','G','H','I','J'];
 
@@ -423,32 +436,45 @@ function render(c) {
 
     // Points A-J
     if (c.points && Object.keys(c.points).length) {
-      html += `<div class="section">
-        <h2>Особистісні риси — 10 точок</h2>`;
-      POINT_ORDER.forEach(code => {
+      // Build list with score10, sort by score ascending (worst → best)
+      const traitsRanked = POINT_ORDER.map(code => {
         const p = c.points[code];
-        if (!p) return;
-        const score = p.score != null ? p.score : 0;
-        const level = p.level || (score <= -19 ? 'Низький' : (score < 32 ? 'Середній' : 'Високий'));
-        const barCls = bandColorCls(level);
+        if (!p) return null;
+        const raw = p.score != null ? p.score : 0;
+        const s10 = score10(raw);
         const ambiguous = p.ambiguous === true;
-        // Position bar: map -100..100 → percentage width
-        const widthPct = Math.max(3, Math.min(100, Math.abs(score) / 100 * 50));
-        const leftPct = score < 0 ? (50 - widthPct) : 50;
-        const conclusion = pointConclusion(code, level, ambiguous);
-        const displayLevel = ambiguous ? 'Невизначено' : level;
-        const displayCls = ambiguous ? 'ambiguous' : level;
-        html += `<div class="point-row">
-          <span class="code">${code}</span>
-          <span class="label">${esc(p.label || code)}<br><span style="font-size:11px; color:var(--c-muted); font-weight:400">${esc(TRAIT_DEFINITIONS[code] || '')}</span></span>
-          <div class="bar">
-            <div style="position:absolute; left:50%; top:-3px; bottom:-3px; width:2px; background:var(--c-muted); opacity:0.4"></div>
-            <div class="bar-fill ${barCls}" style="left:${leftPct}%; width:${widthPct}%"></div>
+        const level = levelFromScore10(s10, ambiguous);
+        return {
+          code,
+          name: TRAITS[code]?.name || (p.label || code),
+          short: TRAITS[code]?.short || '',
+          rawScore: raw,
+          score10: s10,
+          ambiguous,
+          level,
+          conclusion: pointConclusion(code, p.level || level, ambiguous)
+        };
+      }).filter(Boolean).sort((a, b) => a.score10 - b.score10);
+
+      html += `<div class="section">
+        <h2>Шкала оцінювання — бали з 10</h2>
+        <p style="color:var(--c-muted); font-size:13px; margin: -6px 0 18px">Від найслабшого показника до найсильнішого. 1-3 — низький, 4-6 — середній, 7-10 — високий.</p>`;
+      traitsRanked.forEach((t, i) => {
+        const lvlCls = t.ambiguous ? 'ambiguous' : t.level;
+        const dots = [];
+        for (let k = 1; k <= 10; k++) {
+          const filled = k <= t.score10;
+          const colorCls = !filled ? 'empty' : (t.score10 <= 3 ? 'red' : (t.score10 <= 6 ? 'amber' : 'green'));
+          dots.push(`<span class="dot ${colorCls}"></span>`);
+        }
+        html += `<div class="trait-card">
+          <div class="trait-head">
+            <div class="trait-title">${esc(t.name)} — <strong>${t.ambiguous ? '?' : t.score10}/10</strong>. <span class="trait-short">${esc(t.short)}</span></div>
+            <span class="level-badge ${lvlCls}">${t.level}</span>
           </div>
-          <span class="score">${score}</span>
-          <span class="level-badge ${displayCls}">${displayLevel}</span>
-        </div>
-        <div class="point-conclusion">${esc(conclusion)}</div>`;
+          <div class="dots-row">${dots.join('')}</div>
+          <div class="trait-conclusion">${esc(t.conclusion)}</div>
+        </div>`;
       });
       html += `</div>`;
     }

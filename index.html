@@ -29,6 +29,23 @@
 .pricing-grid > .card > p.muted { flex:1; }
 @media (max-width: 1080px) { .pricing-grid { grid-template-columns:repeat(2,1fr); max-width:720px; } }
 @media (max-width: 560px) { .pricing-grid { grid-template-columns:1fr; max-width:420px; } }
+
+.cost-section { padding: 90px 0; background: #faf6f0; }
+.cost-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 7px 16px; border-radius: 999px; font-weight: 600; font-size: 13px; letter-spacing: 0.02em; }
+.cost-section h2 { font-size: 38px; line-height: 1.18; max-width: 760px; margin: 18px auto 14px; }
+.cost-section .sub { font-size: 16px; color: #64748b; max-width: 620px; margin: 0 auto 50px; text-align: center; }
+.cost-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
+.cost-card { background: white; border-radius: 18px; padding: 28px 26px; text-align: left; box-shadow: 0 2px 20px rgba(15,30,50,0.06); display: flex; flex-direction: column; min-height: 250px; }
+.cost-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 22px; }
+.cost-icon.c1 { background: #fde68a; }
+.cost-icon.c2 { background: #bbf7d0; }
+.cost-icon.c3 { background: #e0e7ff; }
+.cost-icon.c4 { background: #fecaca; }
+.cost-num { font-size: 44px; font-weight: 800; line-height: 1; margin-bottom: 14px; color: #0f172a; letter-spacing: -0.02em; }
+.cost-unit { color: var(--c-accent); }
+.cost-desc { font-size: 14px; color: #475569; line-height: 1.5; margin-top: auto; }
+@media (max-width: 1000px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cost-grid { grid-template-columns: 1fr; } .cost-section h2 { font-size: 28px; } }
 </style>
 </head>
 <body>
@@ -65,6 +82,37 @@
       <img class="big" src="/assets/img/hero-main.jpg" alt="Команда обговорює результати">
       <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80" alt="Колеги дивляться на графіки">
       <img src="/assets/img/hero-side.jpg" alt="Аналітика на ноутбуці">
+    </div>
+  </div>
+</section>
+
+
+<section class="cost-section">
+  <div class="container" style="text-align:center">
+    <div class="cost-badge">Класичний найм</div>
+    <h2>Чому HR-процес «як завжди» —<br>це дорого</h2>
+    <p class="sub">Скільки коштує підбір однієї людини, якщо рахувати чесно</p>
+    <div class="cost-grid">
+      <div class="cost-card">
+        <div class="cost-icon c1">⏱</div>
+        <div class="cost-num">3 <span class="cost-unit">год</span></div>
+        <div class="cost-desc">щодня витрачає керівник на перегляд резюме та анкет</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-icon c2">💸</div>
+        <div class="cost-num">180 <span class="cost-unit">тис ₴</span></div>
+        <div class="cost-desc">середня вартість помилки у наймі співробітника</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-icon c3">📅</div>
+        <div class="cost-num">10 <span class="cost-unit">днів</span></div>
+        <div class="cost-desc">середній час до закриття однієї вакансії</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-icon c4">🎯</div>
+        <div class="cost-num">50 <span class="cost-unit">%</span></div>
+        <div class="cost-desc">точність прийняття рішення «по інтуїції»</div>
+      </div>
     </div>
   </div>
 </section>
