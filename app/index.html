@@ -178,8 +178,8 @@ function computeHireRec(c, v) {
   const isPerf = v.verdict === 'Перформер';
   const isHigh = v.confidence === 'висока';
   const n = risks.length;
-  if (isPerf && isHigh && n <= 1) return { text: 'Рекомендовано', cls: 'green', icon: '✓' };
-  if (isPerf && n <= 2)          return { text: 'З застереженнями', cls: 'amber', icon: '⚠' };
+  if (isPerf && isHigh && n <= 1) return { text: 'До співбесіди + найм', cls: 'green', icon: '✓' };
+  if (isPerf && n <= 2)          return { text: 'До співбесіди з застереженнями', cls: 'amber', icon: '⚠' };
   if (isPerf && n >= 3)          return { text: 'Лише виконавча роль', cls: 'amber', icon: '⚠' };
   if (!isPerf && n <= 1)         return { text: 'Виконавча з наглядом', cls: 'amber', icon: '⚠' };
   return { text: 'НЕ рекомендовано', cls: 'red', icon: '✗' };

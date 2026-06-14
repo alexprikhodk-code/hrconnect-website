@@ -317,12 +317,12 @@ function computeHireRecommendation(c, verdict) {
   const critRisks = risks.length;
 
   if (isPerf && isHighConf && critRisks <= 1) {
-    recommendation = 'Рекомендовано до найму';
+    recommendation = 'Рекомендовано до співбесіди та можливого найму';
     recColor = 'var(--c-green-ink)';
     recIcon = '✓';
     recReason = 'Сильний профіль продуктивності + збалансовані особистісні риси.';
   } else if (isPerf && critRisks <= 2) {
-    recommendation = 'Рекомендовано з застереженнями';
+    recommendation = 'Рекомендовано до співбесіди з застереженнями';
     recColor = '#92400e';
     recIcon = '⚠';
     recReason = 'Продуктивний кандидат, але є ' + critRisks + ' ризик(и), що варто врахувати.';
@@ -337,7 +337,7 @@ function computeHireRecommendation(c, verdict) {
     recIcon = '⚠';
     recReason = 'Не показує ознак Продуктивного, але профіль особистості прийнятний.';
   } else {
-    recommendation = 'НЕ рекомендовано до найму';
+    recommendation = 'НЕ рекомендовано до співбесіди';
     recColor = 'var(--c-red-ink)';
     recIcon = '✗';
     recReason = 'Поєднання ' + (isPerf ? '' : 'Виконавця ') + (critRisks ? 'і ' + critRisks + ' ризик(ів) ' : '') + 'робить кандидата високоризиковим.';
@@ -437,7 +437,7 @@ function render(c) {
     // Hire recommendation
     const hire = computeHireRecommendation(c, v);
     const hireCls = hire.recommendation.includes('НЕ рекомендовано') || hire.recommendation.includes('тільки на виконавчу') ? 'red' :
-                    hire.recommendation.includes('Рекомендовано до найму') ? 'green' : 'amber';
+                    hire.recommendation.includes('Рекомендовано до співбесіди та можливого найму') ? 'green' : 'amber';
     html += `<div class="hire-rec ${hireCls}">
       <div class="icon">${hire.recIcon}</div>
       <div style="flex:1">
@@ -445,6 +445,9 @@ function render(c) {
         <div class="desc">${esc(hire.recReason)}</div>
         ${hire.strengths.length ? '<div style="margin-top:10px"><strong style="font-size:12px; color:#166534">Сильні сторони:</strong><br>' + hire.strengths.map(s => '<span class="strength-tag">+ ' + esc(s) + '</span>').join('') + '</div>' : ''}
         ${hire.risks.length ? '<div style="margin-top:8px"><strong style="font-size:12px; color:#991b1b">Ризики:</strong><br>' + hire.risks.map(r => '<span class="risk-tag">! ' + esc(r) + '</span>').join('') + '</div>' : ''}
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(15,30,50,0.18); font-size: 11.5px; color: #4a5566; line-height: 1.5; font-style: italic;">
+          ℹ Результати тестів мають рекомендаційний характер. Остаточне рішення про найм приймається безпосередньо вами після особистої співбесіди з кандидатом.
+        </div>
       </div>
     </div>`;
 
