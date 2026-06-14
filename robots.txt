@@ -1,0 +1,23 @@
+# AI-HRconnect — robots.txt
+# Allow public marketing/auth pages, disallow private dashboard and test pages
+
+User-agent: *
+Allow: /
+Allow: /login.html
+Allow: /register.html
+Allow: /forgot.html
+Allow: /reset.html
+Allow: /assets/
+
+# Private app — only authenticated users
+Disallow: /app/
+Disallow: /test/
+
+# Sensitive files
+Disallow: /supabase/
+Disallow: /*.bat
+Disallow: /*.ps1
+Disallow: /vercel.json
+
+# Sitemap location
+Sitemap: https://hrconnect-website.vercel.app/sitemap.xml

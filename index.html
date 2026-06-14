@@ -47,6 +47,140 @@
 @media (max-width: 1000px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .cost-grid { grid-template-columns: 1fr; } .cost-section h2 { font-size: 28px; } }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://hrconnect-website.vercel.app/#organization",
+      "name": "AI-HRconnect",
+      "url": "https://hrconnect-website.vercel.app/",
+      "logo": "https://hrconnect-website.vercel.app/assets/img/hero-main.jpg",
+      "description": "AI-платформа для тестування кандидатів. 6 методик аналізу: продуктивність, Еннеаграма, DISC, Big Five, IQ, відтворення.",
+      "areaServed": "UA",
+      "knowsLanguage": "uk",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "info@hrconnect.com.ua",
+        "contactType": "Customer Service",
+        "availableLanguage": ["Ukrainian", "Russian", "English"]
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://hrconnect-website.vercel.app/#website",
+      "url": "https://hrconnect-website.vercel.app/",
+      "name": "AI-HRconnect",
+      "description": "Найм без втрачених годин на нерезультативних кандидатів",
+      "publisher": { "@id": "https://hrconnect-website.vercel.app/#organization" },
+      "inLanguage": "uk-UA"
+    },
+    {
+      "@type": "Service",
+      "@id": "https://hrconnect-website.vercel.app/#service",
+      "name": "AI-тестування кандидатів",
+      "provider": { "@id": "https://hrconnect-website.vercel.app/#organization" },
+      "areaServed": { "@type": "Country", "name": "Ukraine" },
+      "description": "Автоматичне тестування кандидатів за 6 науковими методиками з AI-аналізом результатів",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "FREE",
+          "price": "0",
+          "priceCurrency": "UAH",
+          "description": "2 тести на місяць, базовий аналіз"
+        },
+        {
+          "@type": "Offer",
+          "name": "PRO",
+          "price": "1990",
+          "priceCurrency": "UAH",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "1990",
+            "priceCurrency": "UAH",
+            "unitText": "MONTH"
+          },
+          "description": "50 тестів на місяць, повна аналітика + експорт"
+        },
+        {
+          "@type": "Offer",
+          "name": "ENTERPRISE",
+          "price": "4990",
+          "priceCurrency": "UAH",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "4990",
+            "priceCurrency": "UAH",
+            "unitText": "MONTH"
+          },
+          "description": "Безлімітні тести, API, командний доступ"
+        },
+        {
+          "@type": "Offer",
+          "name": "Особиста консультація",
+          "price": "2000",
+          "priceCurrency": "UAH",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "2000",
+            "priceCurrency": "UAH",
+            "unitText": "HOUR"
+          },
+          "description": "Розбір кандидата, кейс, найм"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://hrconnect-website.vercel.app/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Скільки часу займає тест?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "15-20 хвилин адаптивного опитування."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Чи кандидат бачить мої результати?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ні. Результат бачите тільки ви у своєму кабінеті."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Як оплатити PRO?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Поки що — IBAN/карта вручну. Напишіть нам, ми активуємо PRO на 30 днів."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Чи зберігаєте ви персональні дані?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Так, у захищеній БД. Кожен користувач бачить лише свої дані (Row Level Security на рівні Postgres)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "На якій методології ґрунтується AI-аналіз?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Внутрішня методологія AI-HRconnect — поєднання класичних HR-практик і AI-моделей для оцінки продуктивності, особистості і здатності виконувати завдання."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
