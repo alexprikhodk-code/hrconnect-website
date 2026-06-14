@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DISC — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.head-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+.back-link { color: var(--c-muted); font-size: 14px; }
+.title-block h1 { font-size: 26px; margin: 6px 0 4px; }
+.title-block .meta { color: var(--c-muted); font-size: 13px; }
+
+.disc-grid { display: grid; grid-template-columns: 280px 1fr 1fr; gap: 24px; background: white; border-radius: 16px; padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 18px; }
+.dom-card { text-align: center; }
+.dom-letter { width: 150px; height: 150px; border-radius: 30px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 84px; font-weight: 900; line-height: 1; box-shadow: 0 12px 36px rgba(0,0,0,0.15); position: relative; }
+.dom-letter .sub-letter { position: absolute; bottom: 12px; right: 14px; font-size: 32px; opacity: 0.7; }
+.dom-tag { color: var(--c-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.dom-name { font-size: 22px; font-weight: 700; margin: 4px 0 4px; }
+.dom-ua { color: var(--c-muted); font-size: 14px; margin-bottom: 10px; }
+.dom-pct { display: inline-block; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 999px; }
+.dom-desc { margin-top: 18px; font-size: 13px; color: #475569; line-height: 1.5; }
+
+.styles-list h3 { font-size: 14px; margin: 0 0 14px; font-weight: 600; }
+.style-row { display: grid; grid-template-columns: 42px 1fr 80px 50px; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--c-line); }
+.style-row:last-child { border-bottom: none; }
+.style-letter { width: 36px; height: 36px; border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+.style-name { font-size: 14px; font-weight: 600; color: var(--c-ink); }
+.style-name .ua { display: block; font-size: 12px; color: var(--c-muted); font-weight: 400; margin-top: 1px; }
+.style-bar { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.style-bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+.style-pct { text-align: right; font-weight: 700; font-size: 14px; }
+
+.quadrant-block { display: flex; align-items: center; justify-content: center; padding: 10px 0; }
+.quadrant-svg { max-width: 100%; height: auto; }
+
+.summary-card { background: white; border-radius: 16px; padding: 24px 28px; box-shadow: var(--shadow-sm); }
+.summary-card h3 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.summary-card h3 .spark { color: var(--c-accent); }
+.summary-text { font-size: 14px; line-height: 1.65; color: #334155; }
+
+.empty-state { background: white; border-radius: 14px; padding: 60px 28px; text-align: center; color: var(--c-muted); box-shadow: var(--shadow-sm); }
+
+@media (max-width: 1000px) { .disc-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div><a class="back-link" id="backLink">← Назад</a></div>
+    </div>
+
+    <div class="app-content">
+      <div class="head-row">
+        <div class="title-block">
+          <h1>DISC — стиль робочої поведінки</h1>
+          <div class="meta" id="metaLine">—</div>
+        </div>
+      </div>
+
+      <div id="loader" class="empty-state">Завантаження...</div>
+      <div id="content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/test/disc/questions.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+let candidateId = null;
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function buildQuadrant(pcts) {
+  // Classic DISC 2x2 quadrant:
+  // D (top-left): assertive + task     I (top-right): assertive + people
+  // C (bottom-left): reserved + task   S (bottom-right): reserved + people
+  // Axes: vertical = pace (assertive ↑ / reserved ↓), horizontal = focus (task ← / people →)
+  const cx = 200, cy = 200, size = 160;
+  const colors = { D: '#dc2626', I: '#eab308', S: '#10b981', C: '#3b82f6' };
+  // Each quadrant fill based on its percentage
+  function squareOpacity(p) { return Math.max(0.12, p / 100 * 0.7); }
+  // Compute candidate position based on weighted average
+  // X axis: (I + S) - (D + C), Y axis: (D + I) - (S + C)
+  const total = pcts.D + pcts.I + pcts.S + pcts.C;
+  const xRaw = ((pcts.I + pcts.S) - (pcts.D + pcts.C)) / total;
+  const yRaw = ((pcts.D + pcts.I) - (pcts.S + pcts.C)) / total;
+  const dotX = cx + xRaw * size;
+  const dotY = cy - yRaw * size;
+
+  return `<svg class="quadrant-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <!-- 4 quadrant rectangles -->
+    <rect x="40" y="40" width="160" height="160" fill="${colors.D}" fill-opacity="${squareOpacity(pcts.D)}" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="200" y="40" width="160" height="160" fill="${colors.I}" fill-opacity="${squareOpacity(pcts.I)}" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="40" y="200" width="160" height="160" fill="${colors.C}" fill-opacity="${squareOpacity(pcts.C)}" stroke="#cbd5e1" stroke-width="1"/>
+    <rect x="200" y="200" width="160" height="160" fill="${colors.S}" fill-opacity="${squareOpacity(pcts.S)}" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- Labels in corners -->
+    <text x="60" y="68" font-weight="800" font-size="20" fill="${colors.D}">D</text>
+    <text x="60" y="86" font-size="11" fill="#475569">${pcts.D}%</text>
+    <text x="340" y="68" font-weight="800" font-size="20" fill="${colors.I}" text-anchor="end">I</text>
+    <text x="340" y="86" font-size="11" fill="#475569" text-anchor="end">${pcts.I}%</text>
+    <text x="60" y="350" font-weight="800" font-size="20" fill="${colors.C}">C</text>
+    <text x="60" y="368" font-size="11" fill="#475569">${pcts.C}%</text>
+    <text x="340" y="350" font-weight="800" font-size="20" fill="${colors.S}" text-anchor="end">S</text>
+    <text x="340" y="368" font-size="11" fill="#475569" text-anchor="end">${pcts.S}%</text>
+    <!-- Axis labels -->
+    <text x="200" y="22" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">АКТИВНИЙ ТЕМП</text>
+    <text x="200" y="392" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600">СТРИМАНИЙ ТЕМП</text>
+    <text x="20" y="204" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600" transform="rotate(-90 20 204)">ФОКУС НА ЗАВДАННЯХ</text>
+    <text x="380" y="204" text-anchor="middle" font-size="11" fill="#64748b" font-weight="600" transform="rotate(90 380 204)">ФОКУС НА ЛЮДЯХ</text>
+    <!-- Center dot -->
+    <circle cx="${dotX}" cy="${dotY}" r="10" fill="white" stroke="#0f172a" stroke-width="2.5"/>
+    <circle cx="${dotX}" cy="${dotY}" r="5" fill="#0f172a"/>
+  </svg>`;
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  candidateId = params.get('id');
+  if (!candidateId) {
+    document.getElementById('loader').innerHTML = 'Не вказано id кандидата.<br><a href="/app/candidates.html">← Назад</a>';
+    return;
+  }
+  await requireAuth();
+  const { data, error } = await sb.from('candidates').select('*').eq('id', candidateId).maybeSingle();
+  if (error || !data) {
+    document.getElementById('loader').innerHTML = 'Кандидата не знайдено.';
+    return;
+  }
+  document.getElementById('backLink').href = '/app/candidate.html?id=' + candidateId;
+  document.getElementById('backLink').textContent = '← Назад до кандидата';
+  document.getElementById('metaLine').textContent = data.name + (data.email ? ' · ' + data.email : '') + (data.disc_completed_at ? ' · ' + new Date(data.disc_completed_at).toLocaleDateString('uk-UA') : '');
+
+  if (!data.disc_dominant) {
+    const token = data.test_link_token;
+    const url = token ? (window.location.origin + '/test/disc/?t=' + token) : '';
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:48px; margin-bottom:14px">📊</div>
+        <h3>Кандидат ще не пройшов тест DISC</h3>
+        <p>Надішліть це посилання для проходження:</p>
+        ${url ? `<input type="text" readonly value="${esc(url)}" class="form-input" style="max-width:520px; margin:14px auto" onclick="this.select()">
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${esc(url)}'); this.textContent='✓ Скопійовано'">📋 Скопіювати посилання</button>` : ''}
+      </div>`;
+    return;
+  }
+  render(data);
+}
+
+function render(c) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const dom = c.disc_dominant;
+  const pcts = c.disc_percentages || {};
+  const profile = c.disc_profile || dom;
+  const domStyle = DISC_STYLES[dom];
+
+  // Sorted list by percentage descending
+  const sorted = ['D','I','S','C'].map(k => ({ k, p: pcts[k] || 0 })).sort((a, b) => b.p - a.p);
+
+  let styleRows = '';
+  sorted.forEach(({ k, p }) => {
+    const st = DISC_STYLES[k];
+    styleRows += `<div class="style-row">
+      <div class="style-letter" style="background:${st.color}">${k}</div>
+      <div class="style-name">${esc(st.name)}<span class="ua">${esc(st.ua)}</span></div>
+      <div class="style-bar"><div class="style-bar-fill" style="background:${st.color}; width:${p}%"></div></div>
+      <div class="style-pct" style="color:${st.color}">${p}%</div>
+    </div>`;
+  });
+
+  const profileHasSecondary = profile.includes('/');
+  let domLetterHTML = dom;
+  if (profileHasSecondary) {
+    const sub = profile.split('/')[1];
+    domLetterHTML = dom + '<span class="sub-letter">' + sub + '</span>';
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="disc-grid">
+      <div class="dom-card">
+        <div class="dom-letter" style="background:${domStyle.color}">${domLetterHTML}</div>
+        <div class="dom-tag">Стиль ${profile}</div>
+        <div class="dom-name">${esc(domStyle.name)}</div>
+        <div class="dom-ua">${esc(domStyle.ua)}</div>
+        <span class="dom-pct" style="background:${domStyle.color}20; color:${domStyle.color}">${pcts[dom]}%</span>
+        <div class="dom-desc">${esc(domStyle.short)}</div>
+      </div>
+      <div class="styles-list">
+        <h3>Профіль за 4 вимірами</h3>
+        ${styleRows}
+      </div>
+      <div class="quadrant-block">
+        ${buildQuadrant(pcts)}
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3><span class="spark">✦</span> Коротке резюме</h3>
+      <div class="summary-text">${esc(c.disc_summary || DISC_SUMMARIES[dom] || '')}</div>
+    </div>
+  `;
+}
+
+load();
+</script>
+</body></html>

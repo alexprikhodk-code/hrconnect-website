@@ -367,8 +367,9 @@ function render(c) {
         <div class="meta">${esc(c.position || 'Посада не вказана')}${c.email ? ' · ' + esc(c.email) : ''}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
         <span class="cand-status ${statusCls}">${statusTxt}</span>
         ${c.test_completed_at ? `<span style="color:var(--c-muted); font-size:12px; margin-left:10px">${new Date(c.test_completed_at).toLocaleString('uk-UA')}</span>` : ''}
-        <div style="margin-top:12px">
-          <a href="/app/enneagram.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌀 ${c.enneagram_type != null ? 'Еннеаграма: Тип ' + c.enneagram_type : 'Запустити тест Еннеаграма'}</a>
+        <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap">
+          <a href="/app/enneagram.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌀 ${c.enneagram_type != null ? 'Еннеаграма: Тип ' + c.enneagram_type : 'Еннеаграма'}</a>
+          <a href="/app/disc.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">📊 ${c.disc_dominant ? 'DISC: ' + (c.disc_profile || c.disc_dominant) : 'DISC'}</a>
         </div>
       </div>
       <div class="big-verdict ${vcls}">
