@@ -111,12 +111,16 @@ async function refresh() {
     '</tr></thead><tbody>' +
     cands.map(c => {
       const url = c.test_link_token ? (window.location.origin + '/test/?t=' + c.test_link_token) : '';
+      const ennUrl = c.test_link_token ? (window.location.origin + '/test/enneagram/?t=' + c.test_link_token) : '';
       const statusColor = c.test_status === 'completed' ? 'var(--c-green)' : 'var(--c-muted)';
       return '<tr style="border-top:1px solid var(--c-line)">' +
         '<td style="padding:12px 16px; font-weight:600"><a href="/app/candidate.html?id=' + c.id + '" style="color:var(--c-brand)">' + esc(c.name) + '</a></td>' +
         '<td style="padding:12px 16px; color:var(--c-muted)">' + esc(c.position || '—') + '</td>' +
         '<td style="padding:12px 16px"><span style="color:' + statusColor + '">' + (c.test_status === 'completed' ? '✓ Завершено' : '⏳ Очікує') + '</span></td>' +
-        '<td style="padding:12px 16px">' + (url ? '<a href="' + url + '" target="_blank" style="font-size:12px">Відкрити</a>' : '—') + '</td>' +
+        '<td style="padding:12px 16px"><div style="display:flex; flex-direction:column; gap:4px">' + 
+  (url ? '<a href="' + url + '" target="_blank" style="font-size:12px">📋 Основний тест</a>' : '') +
+  (ennUrl ? '<a href="' + ennUrl + '" target="_blank" style="font-size:12px">🌀 Еннеаграма</a>' : '') +
+'</div></td>' +
         '<td style="padding:12px 16px"><button class="btn btn-ghost" style="padding:5px 12px; font-size:12px" onclick="deleteCand(\'' + c.id + '\')">Видалити</button></td>' +
       '</tr>';
     }).join('') + '</tbody></table></div>';

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Еннеаграма — AI-HRconnect</title>
+<link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.head-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+.back-link { color: var(--c-muted); font-size: 14px; }
+.title-block h1 { font-size: 26px; margin: 6px 0 4px; }
+.title-block .meta { color: var(--c-muted); font-size: 13px; }
+
+.enn-grid { display: grid; grid-template-columns: 260px 1fr 1fr; gap: 22px; background: white; border-radius: 16px; padding: 28px; box-shadow: var(--shadow-sm); margin-bottom: 18px; }
+.dominant-card { text-align: center; }
+.dom-circle { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 56px; font-weight: 800; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+.dom-tag { color: var(--c-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.dom-name { font-size: 22px; font-weight: 700; margin: 4px 0 8px; }
+.dom-pct { display: inline-block; background: var(--c-yellow); color: var(--c-yellow-ink); font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 999px; }
+.dom-desc { margin-top: 18px; font-size: 13px; color: #475569; line-height: 1.5; }
+.dom-cand { margin-top: 12px; color: var(--c-muted); font-size: 12px; }
+
+.types-list h3 { font-size: 14px; margin: 0 0 14px; font-weight: 600; }
+.type-row { display: grid; grid-template-columns: 32px 1fr 80px 50px; gap: 10px; align-items: center; padding: 6px 0; }
+.type-num { width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.type-name { font-size: 14px; font-weight: 500; color: var(--c-ink); }
+.type-bar { height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.type-bar-fill { height: 100%; border-radius: 999px; transition: width .5s; }
+.type-pct { text-align: right; font-weight: 700; font-size: 14px; color: var(--c-ink); }
+
+.radar-block { display: flex; align-items: center; justify-content: center; }
+.radar-svg { max-width: 100%; height: auto; }
+.radar-label { font-size: 10.5px; fill: #475569; }
+.radar-label-num { font-weight: 700; fill: #0f172a; }
+
+.summary-card { background: white; border-radius: 16px; padding: 24px 28px; box-shadow: var(--shadow-sm); position: relative; }
+.summary-card h3 { font-size: 16px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+.summary-card h3 .spark { color: var(--c-accent); }
+.summary-text { font-size: 14px; line-height: 1.65; color: #334155; }
+
+.empty-state { background: white; border-radius: 14px; padding: 60px 28px; text-align: center; color: var(--c-muted); box-shadow: var(--shadow-sm); }
+
+@media (max-width: 1000px) {
+  .enn-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="app-side">
+    <div class="logo" id="sideLogo"></div>
+    <div class="nav-section">Робота з кандидатами</div>
+    <a href="/app/" class="nav-item">📊 Дашборд</a>
+    <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
+    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <div class="nav-section">Налаштування</div>
+    <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
+    <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
+    <a href="#" onclick="signOut(); return false;" class="nav-item">↩ Вийти</a>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div><a class="back-link" id="backLink">← К кандидату</a></div>
+    </div>
+
+    <div class="app-content">
+      <div class="head-row">
+        <div class="title-block">
+          <h1>Еннеаграма особистості</h1>
+          <div class="meta" id="metaLine">—</div>
+        </div>
+      </div>
+
+      <div id="loader" class="empty-state">Завантаження...</div>
+      <div id="content" style="display:none"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="/assets/js/env.js"></script>
+<script src="/assets/js/supabase.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/test/enneagram/questions.js"></script>
+<script>
+document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+
+let candidateId = null;
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function buildRadar(percentages) {
+  // 9-axis radar chart, SVG
+  const cx = 220, cy = 220, maxR = 160;
+  const numAxes = 9;
+  const TYPES_ORDER = [1,2,3,4,5,6,7,8,9];
+
+  // Polygon points: 0 = top, going clockwise
+  function pt(typeIdx, value) {
+    const angle = -Math.PI / 2 + (typeIdx / numAxes) * 2 * Math.PI;
+    const r = (value / 100) * maxR;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+  function axisPt(typeIdx) {
+    const angle = -Math.PI / 2 + (typeIdx / numAxes) * 2 * Math.PI;
+    return { x: cx + maxR * Math.cos(angle), y: cy + maxR * Math.sin(angle) };
+  }
+  function labelPt(typeIdx) {
+    const angle = -Math.PI / 2 + (typeIdx / numAxes) * 2 * Math.PI;
+    const r = maxR + 22;
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  }
+
+  // Background polygons (4 concentric)
+  let bg = '';
+  [0.25, 0.5, 0.75, 1.0].forEach((scale, si) => {
+    const pts = TYPES_ORDER.map((t, i) => {
+      const p = pt(i, scale * 100);
+      return p.x + ',' + p.y;
+    }).join(' ');
+    bg += `<polygon points="${pts}" fill="${si === 3 ? '#f8fafc' : 'none'}" stroke="#cbd5e1" stroke-width="0.7" stroke-dasharray="2,2"/>`;
+  });
+  // Axis lines
+  TYPES_ORDER.forEach((t, i) => {
+    const p = axisPt(i);
+    bg += `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="#cbd5e1" stroke-width="0.6"/>`;
+  });
+
+  // Data polygon
+  const dataPts = TYPES_ORDER.map((t, i) => {
+    const p = pt(i, percentages[t] || 0);
+    return p.x + ',' + p.y;
+  }).join(' ');
+
+  // Labels around perimeter
+  let labels = '';
+  TYPES_ORDER.forEach((t, i) => {
+    const p = labelPt(i);
+    const anchor = p.x > cx + 10 ? 'start' : (p.x < cx - 10 ? 'end' : 'middle');
+    const type = ENNEAGRAM_TYPES[t];
+    labels += `<text x="${p.x}" y="${p.y}" text-anchor="${anchor}" dominant-baseline="middle" class="radar-label">
+      <tspan class="radar-label-num">${t}</tspan> ${esc(type.name)}
+    </text>`;
+  });
+
+  return `<svg class="radar-svg" viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
+    ${bg}
+    <polygon points="${dataPts}" fill="#2e7d8f" fill-opacity="0.35" stroke="#1f4e78" stroke-width="2"/>
+    ${labels}
+  </svg>`;
+}
+
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  candidateId = params.get('id');
+  if (!candidateId) {
+    document.getElementById('loader').innerHTML = 'Не вказано id кандидата.<br><a href="/app/candidates.html">← Назад</a>';
+    return;
+  }
+  await requireAuth();
+  const { data, error } = await sb.from('candidates').select('*').eq('id', candidateId).maybeSingle();
+  if (error || !data) {
+    document.getElementById('loader').innerHTML = 'Кандидата не знайдено.';
+    return;
+  }
+  document.getElementById('backLink').href = '/app/candidate.html?id=' + candidateId;
+  document.getElementById('backLink').textContent = '← Назад до кандидата';
+  document.getElementById('metaLine').textContent = data.name + (data.email ? ' · ' + data.email : '') + (data.enneagram_completed_at ? ' · ' + new Date(data.enneagram_completed_at).toLocaleDateString('uk-UA') : '');
+
+  if (data.enneagram_type == null) {
+    const token = data.test_link_token;
+    const url = token ? (window.location.origin + '/test/enneagram/?t=' + token) : '';
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <div style="font-size:48px; margin-bottom:14px">🌀</div>
+        <h3>Кандидат ще не пройшов тест Еннеаграми</h3>
+        <p>Надішліть це посилання для проходження:</p>
+        ${url ? `<input type="text" readonly value="${esc(url)}" class="form-input" style="max-width:520px; margin:14px auto" onclick="this.select()">
+        <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${esc(url)}'); this.textContent='✓ Скопійовано'">📋 Скопіювати посилання</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  render(data);
+}
+
+function render(c) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const dom = c.enneagram_type;
+  const pcts = c.enneagram_percentages || {};
+  const domType = ENNEAGRAM_TYPES[dom];
+
+  // Sorted list by percentage descending
+  const sorted = Object.keys(pcts).map(t => ({ t: +t, p: pcts[t] })).sort((a, b) => b.p - a.p);
+
+  let typeRows = '';
+  sorted.forEach(({ t, p }) => {
+    const tt = ENNEAGRAM_TYPES[t];
+    typeRows += `<div class="type-row">
+      <div class="type-num" style="background:${tt.color}">${t}</div>
+      <div>
+        <div class="type-name">${esc(tt.name)}</div>
+      </div>
+      <div class="type-bar"><div class="type-bar-fill" style="background:${tt.color}; width:${p}%"></div></div>
+      <div class="type-pct">${p}%</div>
+    </div>`;
+  });
+
+  document.getElementById('content').innerHTML = `
+    <div class="enn-grid">
+      <div class="dominant-card">
+        <div class="dom-circle" style="background:${domType.color}">${dom}</div>
+        <div class="dom-tag">Тип ${dom}</div>
+        <div class="dom-name">${esc(domType.name)}</div>
+        <span class="dom-pct">${pcts[dom]}%</span>
+        <div class="dom-desc">${esc(domType.short)}</div>
+        <div class="dom-cand">Кандидат: ${esc(c.name || '—')}</div>
+      </div>
+      <div class="types-list">
+        <h3>Профіль по типах</h3>
+        ${typeRows}
+      </div>
+      <div class="radar-block">
+        ${buildRadar(pcts)}
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3><span class="spark">✦</span> Коротке резюме</h3>
+      <div class="summary-text">${esc(c.enneagram_summary || ENNEAGRAM_SUMMARIES[dom] || '')}</div>
+    </div>
+  `;
+}
+
+load();
+</script>
+</body></html>
