@@ -3,21 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Завантажити тест — AI-HRconnect</title>
+<title>AI аналіз резюме — AI-HRconnect</title>
 <link rel="stylesheet" href="/assets/css/main.css">
+<style>
+.up-shell { max-width: 880px; margin: 0 auto; }
+.hero-card { background: linear-gradient(135deg, #1f4e78 0%, #2e7d8f 100%); color: white; border-radius: 16px; padding: 30px 36px; margin-bottom: 22px; }
+.hero-card h1 { margin: 0 0 8px; font-size: 26px; }
+.hero-card p { margin: 0; opacity: 0.92; font-size: 14px; line-height: 1.55; }
+.hero-card .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.18); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+.step-card { background: white; border-radius: 14px; padding: 24px 28px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+.step-card h2 { margin: 0 0 16px; font-size: 17px; display: flex; align-items: center; gap: 10px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: var(--c-brand); color: white; font-size: 13px; font-weight: 700; }
+
+.drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 36px 24px; text-align: center; cursor: pointer; transition: all .2s; background: #f8fbfd; }
+.drop-zone:hover, .drop-zone.over { border-color: var(--c-brand); background: #eff6fb; transform: translateY(-1px); }
+.drop-zone .ic { font-size: 42px; line-height: 1; margin-bottom: 10px; }
+.drop-zone .ttl { font-size: 15px; font-weight: 700; color: var(--c-brand); }
+.drop-zone .sub { font-size: 12.5px; color: var(--c-muted); margin-top: 4px; }
+.drop-zone input[type=file] { display: none; }
+
+.tab-row { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--c-line); }
+.tab-btn { background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
+.tab-btn.active { color: var(--c-brand); border-bottom-color: var(--c-brand); }
+
+.preview-text { background: #f1f5f9; border-radius: 8px; padding: 14px 16px; font-size: 12px; line-height: 1.5; max-height: 220px; overflow-y: auto; white-space: pre-wrap; color: #475569; margin-top: 10px; font-family: ui-monospace, SF Mono, monospace; }
+
+.analyze-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.analyze-row .info { font-size: 12.5px; color: var(--c-muted); }
+.analyze-btn { background: linear-gradient(135deg, #1f4e78 0%, #2e7d8f 100%); color: white; border: none; padding: 12px 26px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all .15s; }
+.analyze-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(31,78,120,.3); }
+.analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.loading-card { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; display: none; align-items: center; gap: 14px; }
+.loading-card .spin { width: 24px; height: 24px; border: 3px solid #d97706; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-card .txt { font-size: 14px; color: #78350f; font-weight: 600; }
+.loading-card .sub { font-size: 12px; color: #a16207; margin-top: 2px; }
+
+.result-card { background: white; border-radius: 14px; padding: 24px 28px; margin-bottom: 16px; box-shadow: var(--shadow-sm); display: none; }
+.result-card.show { display: block; }
+.result-verdict { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 12px; margin-bottom: 16px; }
+.result-verdict.perf { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
+.result-verdict.del  { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+.result-verdict .ic { font-size: 32px; }
+.result-verdict .val { font-size: 18px; font-weight: 800; }
+.result-verdict .sub { font-size: 12px; color: var(--c-muted); margin-top: 2px; }
+
+.err-box { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+
+.info-tip { background: #eff6fb; border-left: 4px solid var(--c-brand); padding: 12px 16px; border-radius: 8px; font-size: 12.5px; color: #1e3a5f; line-height: 1.55; margin-top: 14px; }
+
+textarea.resume-paste { width: 100%; min-height: 240px; border: 1.5px solid var(--c-line); border-radius: 10px; padding: 14px 16px; font-size: 13px; font-family: inherit; resize: vertical; }
+textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
+</style>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#1f4e78">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="AI-HRconnect">
-<meta property="og:image" content="https://hrconnect-website.vercel.app/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hrconnect-website.vercel.app/og-image.png">
 </head>
 <body>
 <div class="app-shell">
@@ -27,7 +70,7 @@
     <div class="nav-section">Робота з кандидатами</div>
     <a href="/app/" class="nav-item">📊 Дашборд</a>
     <a href="/app/candidates.html" class="nav-item">👥 Кандидати</a>
-    <a href="/app/upload.html" class="nav-item active">⬆ Завантажити тест</a>
+    <a href="/app/upload.html" class="nav-item active">🤖 AI аналіз резюме</a>
     <div class="nav-section">Налаштування</div>
     <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
     <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
@@ -35,18 +78,81 @@
   </aside>
 
   <main class="app-main">
-    <div class="app-topbar"><strong>Завантажити готовий тест</strong></div>
+    <div class="app-topbar">
+      <strong>AI аналіз резюме</strong>
+    </div>
+
     <div class="app-content">
-      <p class="muted">Якщо у вас вже є PDF-звіт із результатами тестування — завантажте його тут. Система розпарсить, побудує аналіз і додасть кандидата.</p>
+      <div class="up-shell">
+        <div class="hero-card">
+          <div class="badge">🤖 AI-FEATURE</div>
+          <h1>Аналіз кандидата за резюме</h1>
+          <p>Завантажте PDF/DOCX резюме або вставте текст з Google Doc — AI оцінить кандидата за методологією 6 тестів (продуктивність, IQ, відтворення, Еннеаграма, DISC, Big Five) і сформує повний звіт. Якщо потім кандидат пройде живі тести — результати уточняться.</p>
+        </div>
 
-      <div class="card" style="border:2px dashed var(--c-line); text-align:center; padding:40px" id="drop">
-        <div style="font-size:42px; margin-bottom:8px">📄</div>
-        <strong>Перетягніть PDF сюди</strong>
-        <div class="muted mt-2">або клікніть, щоб вибрати файл</div>
-        <input type="file" id="fileInput" accept=".pdf" style="display:none">
+        <div class="step-card">
+          <h2><span class="step-num">1</span> Завантажте резюме</h2>
+
+          <div class="tab-row">
+            <button type="button" class="tab-btn active" data-tab="file" onclick="switchTab('file')">📁 Файл (PDF / DOCX)</button>
+            <button type="button" class="tab-btn" data-tab="paste" onclick="switchTab('paste')">📋 Вставити текст</button>
+          </div>
+
+          <div id="tab-file">
+            <label class="drop-zone" id="dropZone">
+              <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt">
+              <div class="ic">📄</div>
+              <div class="ttl">Перетягніть резюме сюди або клікніть для вибору</div>
+              <div class="sub">PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.</div>
+            </label>
+          </div>
+
+          <div id="tab-paste" style="display:none">
+            <textarea class="resume-paste" id="pastedText" placeholder="Скопіюйте текст резюме сюди (з Google Doc, LinkedIn, Word тощо)..."></textarea>
+          </div>
+
+          <div id="textPreviewWrap" style="display:none; margin-top:14px">
+            <div style="font-size:11px; color:var(--c-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px">Витягнутий текст (перевірте, що читається коректно)</div>
+            <div class="preview-text" id="textPreview"></div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <h2><span class="step-num">2</span> Контекст (опційно)</h2>
+          <div class="form-group">
+            <label class="form-label">Посада, на яку розглядаєте кандидата</label>
+            <input type="text" class="form-input" id="positionContext" placeholder="Наприклад: Керівник відділу продажів">
+            <div style="font-size:11.5px; color:var(--c-muted); margin-top:6px">Це підвищить точність — AI оцінить кандидата саме під цю роль.</div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <h2><span class="step-num">3</span> Запустити аналіз</h2>
+          <div class="analyze-row">
+            <div class="info" id="costInfo">Аналіз триває ~30-60 секунд. Один аналіз ≈ $0.05.</div>
+            <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
+              🤖 Запустити AI-аналіз
+            </button>
+          </div>
+          <div id="errBox"></div>
+          <div class="info-tip">
+            ℹ AI-аналіз — попередня оцінка на основі резюме. Для остаточного рішення раджу попросити кандидата пройти живі тести через посилання (вкладка «Кандидати»). Результати поєднаються.
+          </div>
+        </div>
+
+        <div class="loading-card" id="loadingCard">
+          <div class="spin"></div>
+          <div>
+            <div class="txt">AI аналізує резюме...</div>
+            <div class="sub">~30-60 секунд. Не закривайте сторінку.</div>
+          </div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+          <h2 style="margin:0 0 14px">✓ Аналіз завершено</h2>
+          <div id="resultBody"></div>
+        </div>
       </div>
-
-      <div id="status" class="mt-4"></div>
     </div>
   </main>
 </div>
@@ -55,33 +161,224 @@
 <script src="/assets/js/env.js"></script>
 <script src="/assets/js/supabase.js"></script>
 <script src="/assets/js/auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
-(async () => { await requireAuth(); })();
 
-const drop = document.getElementById('drop');
-const fileInput = document.getElementById('fileInput');
-drop.onclick = () => fileInput.click();
-['dragover','dragenter'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.borderColor = 'var(--c-brand)'; }));
-['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.borderColor = 'var(--c-line)'; }));
-drop.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) handle(ev.dataTransfer.files[0]); });
-fileInput.onchange = ev => { if (ev.target.files.length) handle(ev.target.files[0]); };
+let extractedText = '';
 
-async function handle(file) {
-  const status = document.getElementById('status');
-  status.innerHTML = '<div class="card"><strong>⏳ Обробляю ' + file.name + '...</strong></div>';
-  const user = await currentUser();
-
-  // Upload to Supabase Storage (optional — for record)
-  const path = user.id + '/' + Date.now() + '_' + file.name;
-  await sb.storage.from('test-files').upload(path, file).catch(() => {});
-
-  status.innerHTML = '<div class="card"><strong>📋 Файл збережено.</strong><br><br>' +
-    'Парсинг PDF і AI-аналіз потребують серверної функції. У наступному релізі. Поки що:<br>' +
-    '1. Скопіюйте відповіді з PDF<br>' +
-    '2. Перейдіть у чат Claude (як адмін), попросіть проаналізувати<br>' +
-    '3. Результат додасться у вашу базу</div>';
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tab-file').style.display = tab === 'file' ? 'block' : 'none';
+  document.getElementById('tab-paste').style.display = tab === 'paste' ? 'block' : 'none';
+  if (tab === 'paste') {
+    document.getElementById('analyzeBtn').disabled = (document.getElementById('pastedText').value.trim().length < 100);
+  } else {
+    document.getElementById('analyzeBtn').disabled = (extractedText.trim().length < 100);
+  }
 }
+
+document.getElementById('pastedText').addEventListener('input', e => {
+  extractedText = e.target.value;
+  showPreview(extractedText);
+  document.getElementById('analyzeBtn').disabled = (extractedText.trim().length < 100);
+});
+
+const dz = document.getElementById('dropZone');
+['dragover','dragenter'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('over'); }));
+['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('over'); }));
+dz.addEventListener('drop', ev => { ev.preventDefault(); if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]); });
+document.getElementById('fileInput').addEventListener('change', ev => { if (ev.target.files.length) handleFile(ev.target.files[0]); });
+
+async function handleFile(file) {
+  const err = document.getElementById('errBox'); err.innerHTML = '';
+  try {
+    let text = '';
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.txt')) {
+      text = await file.text();
+    } else if (name.endsWith('.docx') || name.endsWith('.doc')) {
+      const buf = await file.arrayBuffer();
+      const res = await mammoth.extractRawText({ arrayBuffer: buf });
+      text = res.value;
+    } else if (name.endsWith('.pdf')) {
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const p = await pdf.getPage(i);
+        const content = await p.getTextContent();
+        pages.push(content.items.map(it => it.str).join(' '));
+      }
+      text = pages.join('\n\n');
+    } else {
+      throw new Error('Підтримуються тільки PDF, DOCX, TXT');
+    }
+    extractedText = text;
+    showPreview(text);
+    document.getElementById('analyzeBtn').disabled = (text.trim().length < 100);
+    document.querySelector('.drop-zone .ttl').textContent = '✓ Файл: ' + file.name;
+    document.querySelector('.drop-zone .sub').textContent = 'Витягнуто ' + text.length + ' символів. Можна замінити файл.';
+  } catch (e) {
+    err.innerHTML = '<div class="err-box">⚠ Помилка читання файлу: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function showPreview(text) {
+  const wrap = document.getElementById('textPreviewWrap');
+  const pre = document.getElementById('textPreview');
+  if (text && text.trim().length > 0) {
+    wrap.style.display = 'block';
+    pre.textContent = text.slice(0, 3000) + (text.length > 3000 ? '\n[…ще ' + (text.length - 3000) + ' символів…]' : '');
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+async function runAnalysis() {
+  const err = document.getElementById('errBox'); err.innerHTML = '';
+  const btn = document.getElementById('analyzeBtn');
+  const loader = document.getElementById('loadingCard');
+  const resultCard = document.getElementById('resultCard');
+  resultCard.classList.remove('show');
+
+  if (extractedText.trim().length < 100) {
+    err.innerHTML = '<div class="err-box">⚠ Текст резюме занадто короткий (потрібно мінімум 100 символів).</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  loader.style.display = 'flex';
+
+  try {
+    const positionContext = document.getElementById('positionContext').value.trim();
+    const { data, error } = await sb.functions.invoke('analyze-resume', {
+      body: { resume_text: extractedText, position_context: positionContext || null }
+    });
+    if (error) throw new Error(error.message || 'Edge Function error');
+    if (data?.error) throw new Error(data.error + (data.details ? '\n' + JSON.stringify(data.details).slice(0, 400) : ''));
+
+    const analysis = data.analysis;
+    const meta = data.meta;
+    if (!analysis || !analysis.verdict) throw new Error('AI повернув некоректний результат');
+
+    // Save candidate
+    const user = await currentUser();
+    const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+    const candidatePayload = {
+      user_id: user.id,
+      name: analysis.name || 'Без імені (з резюме)',
+      email: analysis.email || null,
+      phone: analysis.phone || null,
+      position: analysis.position || positionContext || null,
+      test_link_token: token,
+      test_status: 'completed',
+      test_completed_at: new Date().toISOString(),
+      source: 'resume_ai',
+      resume_text: extractedText.slice(0, 50000),
+      ai_analysis_meta: meta,
+      assigned_tests: ['productivity', 'enneagram', 'disc', 'bigfive', 'iq', 'reproduction'],
+      product_self: analysis.product_self || null,
+      verdict: analysis.verdict,
+      verdict_confidence: analysis.verdict_confidence,
+      verdict_score: analysis.verdict_score,
+      verdict_reasons: analysis.verdict_reasons,
+      points: analysis.points || null,
+      iq: analysis.iq || null,
+      iq_band: analysis.iq_band || null,
+      iq_summary: analysis.iq_summary || null,
+      iq_completed_at: new Date().toISOString(),
+      reproduction: analysis.reproduction || null,
+      reproduction_band: analysis.reproduction_band || null,
+      reproduction_summary: analysis.reproduction_summary || null,
+      reproduction_completed_at: new Date().toISOString(),
+      enneagram_type: analysis.enneagram_type || null,
+      enneagram_summary: analysis.enneagram_summary || null,
+      enneagram_completed_at: new Date().toISOString(),
+      disc_dominant: analysis.disc_dominant || null,
+      disc_profile: analysis.disc_profile || null,
+      disc_summary: analysis.disc_summary || null,
+      disc_completed_at: new Date().toISOString(),
+      bigfive_dominant: analysis.bigfive_dominant || null,
+      bigfive_scores: analysis.bigfive_scores || null,
+      bigfive_summary: analysis.bigfive_summary || null,
+      bigfive_completed_at: new Date().toISOString(),
+      productivity_completed_at: new Date().toISOString()
+    };
+    const { data: cand, error: insErr } = await sb.from('candidates').insert(candidatePayload).select().single();
+    if (insErr) throw insErr;
+
+    loader.style.display = 'none';
+    showResult(analysis, cand);
+  } catch (e) {
+    loader.style.display = 'none';
+    btn.disabled = false;
+    err.innerHTML = '<div class="err-box">⚠ ' + escapeHtml(e.message || String(e)) + '</div>';
+  }
+}
+
+function showResult(a, cand) {
+  const isPerf = a.verdict === 'Перформер';
+  const body = document.getElementById('resultBody');
+  body.innerHTML = `
+    <div class="result-verdict ${isPerf ? 'perf' : 'del'}">
+      <div class="ic">${isPerf ? '✓' : '⚠'}</div>
+      <div>
+        <div class="val">${isPerf ? 'Перформер — Продуктивний та ефективний' : 'Делатель — Виконавець'}</div>
+        <div class="sub">впевненість: ${escapeHtml(a.verdict_confidence || '—')} · бал: ${a.verdict_score ?? '—'}</div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px">
+      <div style="background:#f8fafc; padding:12px 14px; border-radius:10px">
+        <div style="font-size:10.5px; color:var(--c-muted); text-transform:uppercase; letter-spacing:0.05em">🧠 IQ</div>
+        <div style="font-size:20px; font-weight:800; margin-top:2px">${a.iq ?? '—'}</div>
+        <div style="font-size:11px; color:var(--c-muted)">${escapeHtml(a.iq_band || '')}</div>
+      </div>
+      <div style="background:#f8fafc; padding:12px 14px; border-radius:10px">
+        <div style="font-size:10.5px; color:var(--c-muted); text-transform:uppercase; letter-spacing:0.05em">👁️ Відтворення</div>
+        <div style="font-size:20px; font-weight:800; margin-top:2px">${a.reproduction != null ? a.reproduction + '%' : '—'}</div>
+        <div style="font-size:11px; color:var(--c-muted)">${escapeHtml(a.reproduction_band || '')}</div>
+      </div>
+      <div style="background:#f8fafc; padding:12px 14px; border-radius:10px">
+        <div style="font-size:10.5px; color:var(--c-muted); text-transform:uppercase; letter-spacing:0.05em">🌀 Еннеаграма</div>
+        <div style="font-size:20px; font-weight:800; margin-top:2px">${a.enneagram_type ? 'Тип ' + a.enneagram_type : '—'}</div>
+        <div style="font-size:11px; color:var(--c-muted)">${escapeHtml((a.disc_dominant || '') + (a.bigfive_dominant ? ' · ' + a.bigfive_dominant : ''))}</div>
+      </div>
+    </div>
+    ${a.strengths?.length ? `<div style="margin-bottom:10px"><strong style="font-size:13px; color:#166534">Сильні сторони:</strong><br>${a.strengths.map(s => `<span style="display:inline-block; padding:3px 9px; background:#dcfce7; color:#166534; border-radius:999px; font-size:12px; margin:3px 4px 3px 0">+ ${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+    ${a.risks?.length ? `<div style="margin-bottom:10px"><strong style="font-size:13px; color:#991b1b">Ризики:</strong><br>${a.risks.map(s => `<span style="display:inline-block; padding:3px 9px; background:#fee2e2; color:#991b1b; border-radius:999px; font-size:12px; margin:3px 4px 3px 0">! ${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+    ${a.recommendation ? `<div style="padding:12px 16px; background:#f8fafc; border-left:3px solid var(--c-brand); border-radius:6px; font-size:13.5px; line-height:1.55; margin-top:14px"><strong>Рекомендація:</strong><br>${escapeHtml(a.recommendation)}</div>` : ''}
+    ${a.missing_data?.length ? `<div style="margin-top:14px; font-size:12px; color:var(--c-muted)"><strong>Бракує даних для уточнення:</strong> ${a.missing_data.map(escapeHtml).join('; ')}</div>` : ''}
+    <div style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap">
+      <a href="/app/candidate.html?id=${cand.id}" class="btn btn-primary">📋 Переглянути картку кандидата</a>
+      <a href="/app/report.html?id=${cand.id}" class="btn btn-ghost">📄 Сформувати PDF-звіт</a>
+      <button class="btn btn-ghost" onclick="resetAll()">🔄 Аналізувати ще одне резюме</button>
+    </div>
+  `;
+  document.getElementById('resultCard').classList.add('show');
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetAll() {
+  extractedText = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('pastedText').value = '';
+  document.getElementById('positionContext').value = '';
+  document.querySelector('.drop-zone .ttl').textContent = 'Перетягніть резюме сюди або клікніть для вибору';
+  document.querySelector('.drop-zone .sub').textContent = 'PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.';
+  document.getElementById('textPreviewWrap').style.display = 'none';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('errBox').innerHTML = '';
+}
+
+function escapeHtml(s) {
+  return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+(async () => { await requireAuth(); })();
 </script>
 <script src="/assets/js/ux.js"></script>
 </body></html>

@@ -70,6 +70,10 @@
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--c-muted); }
 
+.ai-source-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: white; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 8px; box-shadow: 0 2px 6px rgba(168,85,247,.3); }
+.ai-disclaimer { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-left: 4px solid #a855f7; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #581c87; margin-bottom: 16px; line-height: 1.5; }
+
+
 /* === Tests strip (like PDF executive summary) === */
 .tests-strip-card { background: white; border-radius: 14px; padding: 20px 24px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
 .ts-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-weight: 700; font-size: 14px; color: var(--c-brand); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -111,7 +115,7 @@
     <div class="nav-section">Робота з кандидатами</div>
     <a href="/app/" class="nav-item">📊 Дашборд</a>
     <a href="/app/candidates.html" class="nav-item active">👥 Кандидати</a>
-    <a href="/app/upload.html" class="nav-item">⬆ Завантажити тест</a>
+    <a href="/app/upload.html" class="nav-item">🤖 AI аналіз резюме</a>
     <div class="nav-section">Налаштування</div>
     <a href="/app/settings.html" class="nav-item">⚙ Профіль</a>
     <a href="/app/subscription.html" class="nav-item">💳 Підписка</a>
@@ -419,7 +423,7 @@ function render(c) {
       <div>
         <h1>${esc(c.name)}</h1>
         <div class="meta">${esc(c.position || 'Посада не вказана')}${c.email ? ' · ' + esc(c.email) : ''}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
-        <span class="cand-status ${statusCls}">${statusTxt}</span>
+        <span class="cand-status ${statusCls}">${statusTxt}</span>${c.source === 'resume_ai' ? '<span class="ai-source-badge">🤖 Аналіз з резюме</span>' : ''}
         ${c.test_completed_at ? `<span style="color:var(--c-muted); font-size:12px; margin-left:10px">${new Date(c.test_completed_at).toLocaleString('uk-UA')}</span>` : ''}
       </div>
       <div class="big-verdict ${vcls}">
@@ -428,6 +432,10 @@ function render(c) {
         <div class="conf">впевненість: ${esc(v.confidence)}</div>
       </div>
     </div>
+
+    ${c.source === 'resume_ai' ? `<div class="ai-disclaimer">
+      🤖 <strong>Цей звіт сформовано AI на основі резюме</strong>, а не з пройдених живих тестів. Оцінки — попередні, з нижчою впевненістю. Щоб уточнити картину — попросіть кандидата пройти живі тести через посилання.
+    </div>` : ''}
 
     <!-- Tests strip — like dashboard / PDF executive summary -->
     <div class="tests-strip-card">
