@@ -77,18 +77,18 @@ serve(async (req: Request) => {
     const { resume_text, position_context, candidate_name_hint } = await req.json();
     if (!resume_text || resume_text.trim().length < 100) {
       return new Response(JSON.stringify({ error: "resume_text занадто короткий (мінімум 100 символів)" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY не сконфігуровано в Edge Function secrets" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    const MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-5";
+    const MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-haiku-4-5";
     const userPrompt = `Проаналізуй наступне резюме:
 
 ${position_context ? `КОНТЕКСТ: HR розглядає кандидата на посаду — "${position_context}".\n\n` : ""}${candidate_name_hint ? `Підказка по імені: ${candidate_name_hint}\n\n` : ""}--- РЕЗЮМЕ ---
@@ -113,10 +113,19 @@ ${resume_text.slice(0, 25000)}
     });
 
     if (!aiResp.ok) {
-      const err = await aiResp.text();
-      console.error("Anthropic API error", aiResp.status, err);
-      return new Response(JSON.stringify({ error: "Anthropic error", status: aiResp.status, details: err }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      const errText = await aiResp.text();
+      console.error("Anthropic API error", aiResp.status, errText);
+      let errParsed = null;
+      try { errParsed = JSON.parse(errText); } catch(e) {}
+      const errMsg = errParsed?.error?.message || errText.slice(0, 400);
+      return new Response(JSON.stringify({
+        error: `Anthropic ${aiResp.status}: ${errMsg}`,
+        status: aiResp.status,
+        details: errParsed || errText.slice(0, 800),
+        model_used: MODEL
+      }), {
+        status: 200, // return 200 so Supabase SDK doesn't wrap error
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -132,7 +141,7 @@ ${resume_text.slice(0, 25000)}
       analysis = JSON.parse(jsonStr);
     } catch (e) {
       return new Response(JSON.stringify({ error: "AI returned non-JSON", raw: rawText.slice(0, 1500) }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -150,7 +159,7 @@ ${resume_text.slice(0, 25000)}
   } catch (e) {
     console.error("analyze-resume crash:", e);
     return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 });

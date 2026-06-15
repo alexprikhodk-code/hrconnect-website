@@ -175,6 +175,7 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
+console.log('[AI-Resume] upload.html version: 2026-06-16-v3 (verbose logging enabled)');
 
 let extractedText = '';
 
@@ -252,6 +253,11 @@ function togglePaste() {
 
 async function runAnalysis() {
   console.log('[AI-Resume] runAnalysis started');
+  // Immediate visible feedback so user always sees something on click
+  const _err = document.getElementById('errBox');
+  _err.innerHTML = '<div style="background:#dbeafe; border-left:4px solid #2563eb; padding:10px 14px; border-radius:8px; color:#1e3a8a; font-size:13px">🔄 Обробляю запит... (DevTools Console → шукай [AI-Resume])</div>';
+  _err.scrollIntoView({behavior:'smooth', block:'center'});
+  await new Promise(r => setTimeout(r, 100)); // ensure UI repaints
   const err = document.getElementById('errBox');
   const btn = document.getElementById('analyzeBtn');
   const loader = document.getElementById('loadingCard');
