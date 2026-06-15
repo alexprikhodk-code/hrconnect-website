@@ -12,9 +12,7 @@
   try { answers = JSON.parse(localStorage.getItem(stateKey) || '{}').answers || {}; } catch (e) {}
 
   async function loadCandidate() {
-    const { data, error } = await sb.from('candidates')
-      .select('id, name, position, bigfive_dominant, test_link_token')
-      .eq('test_link_token', token).maybeSingle();
+    const { data, error } = await sb.rpc('get_candidate_by_token', { p_token: token });
     if (error || !data) { showError('Посилання недійсне.'); return; }
     if (data.bigfive_dominant) { showError('Цей тест уже пройдено. Дякуємо!'); return; }
     candidate = data;
@@ -121,13 +119,13 @@
     const btn = event.target;
     btn.disabled = true; btn.textContent = 'Зберігаю...';
 
-    const { error } = await sb.from('candidates').update({
+    const { error } = await sb.rpc('update_candidate_by_token', { p_token: token, p_data: {
       bigfive_dominant: dominant,
       bigfive_percentages: percentages,
       bigfive_levels: levels,
       bigfive_summary: summary,
       bigfive_completed_at: new Date().toISOString()
-    }).eq('test_link_token', token);
+    } });
 
     if (error) {
       document.getElementById('testErr').textContent = '✗ ' + error.message;

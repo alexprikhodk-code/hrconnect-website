@@ -141,11 +141,7 @@ body { background: #f5f7fa; }
   }
 
   async function loadCandidate() {
-    const { data, error } = await sb
-      .from('candidates')
-      .select('id, name, position, test_status, test_link_token, assigned_tests, points, productivity_completed_at, enneagram_completed_at, disc_completed_at, bigfive_completed_at, iq_completed_at, reproduction_completed_at')
-      .eq('test_link_token', token)
-      .maybeSingle();
+    const { data, error } = await sb.rpc('get_candidate_by_token', { p_token: token });
     if (error || !data) {
       showError('Посилання недійсне або тестування видалене.');
       return;
@@ -239,10 +235,10 @@ body { background: #f5f7fa; }
 
     // Mark candidate as completed if not yet, and trigger email notification
     if (candidate.test_status !== 'completed') {
-      const { error } = await sb.from('candidates').update({
+      const { error } = await sb.rpc('update_candidate_by_token', { p_token: token, p_data: {
         test_status: 'completed',
         test_completed_at: new Date().toISOString()
-      }).eq('test_link_token', token);
+      } });
 
       if (!error) {
         sb.functions.invoke('notify-test-complete', {

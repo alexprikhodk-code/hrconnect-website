@@ -11,9 +11,7 @@
   if (!token) { showError('У посиланні немає коду тесту.'); return; }
 
   async function loadCandidate() {
-    const { data, error } = await sb.from('candidates')
-      .select('id, name, position, reproduction, test_link_token')
-      .eq('test_link_token', token).maybeSingle();
+    const { data, error } = await sb.rpc('get_candidate_by_token', { p_token: token });
     if (error || !data) { showError('Посилання недійсне.'); return; }
     if (data.reproduction != null) { showError('Цей тест уже пройдено.'); return; }
     candidate = data;
@@ -106,12 +104,12 @@
     const band = reproductionBand(score);
     const summary = reproductionSummary(score, band);
 
-    const { error } = await sb.from('candidates').update({
+    const { error } = await sb.rpc('update_candidate_by_token', { p_token: token, p_data: {
       reproduction: score,
       reproduction_band: band,
       reproduction_summary: summary,
       reproduction_completed_at: new Date().toISOString()
-    }).eq('test_link_token', token);
+    } });
 
     if (error) {
       alert('Не вдалось зберегти: ' + error.message);

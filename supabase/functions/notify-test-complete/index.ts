@@ -13,9 +13,13 @@ const corsHeaders = {
 
 const TEST_LABELS: Record<string, string> = {
   main: "Основний тест продуктивності",
+  productivity: "Тест на продуктивність",
   enneagram: "Тест Еннеаграма",
   disc: "Тест DISC",
   bigfive: "Тест Big Five",
+  iq: "IQ-тест",
+  reproduction: "Тест на відтворення",
+  all: "Усі призначені тести",
 };
 
 serve(async (req: Request) => {
@@ -25,6 +29,7 @@ serve(async (req: Request) => {
 
   try {
     const { candidate_id, test_type } = await req.json();
+    console.log("notify-test-complete called", { candidate_id, test_type });
 
     if (!candidate_id) {
       return new Response(JSON.stringify({ error: "candidate_id required" }), {
@@ -59,10 +64,12 @@ serve(async (req: Request) => {
       .single();
 
     if (pErr || !profile || !profile.email) {
-      return new Response(JSON.stringify({ error: "owner profile not found" }), {
+      console.error("profile not found or no email", { pErr, profile });
+      return new Response(JSON.stringify({ error: "owner profile not found", details: pErr?.message, profile }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    console.log("sending to:", profile.email);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
@@ -119,7 +126,8 @@ serve(async (req: Request) => {
 
     if (!resendRes.ok) {
       const err = await resendRes.text();
-      return new Response(JSON.stringify({ error: "resend failed", details: err }), {
+      console.error("Resend API error", resendRes.status, err);
+      return new Response(JSON.stringify({ error: "resend failed", status: resendRes.status, details: err }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

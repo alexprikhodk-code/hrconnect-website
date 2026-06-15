@@ -15,9 +15,7 @@
   } catch (e) {}
 
   async function loadCandidate() {
-    const { data, error } = await sb.from('candidates')
-      .select('id, name, position, enneagram_type, test_link_token')
-      .eq('test_link_token', token).maybeSingle();
+    const { data, error } = await sb.rpc('get_candidate_by_token', { p_token: token });
     if (error || !data) { showError('Посилання недійсне.'); return; }
     if (data.enneagram_type != null) { showError('Цей тест уже пройдено. Дякуємо!'); return; }
     candidate = data;
@@ -117,12 +115,12 @@
     const btn = event.target;
     btn.disabled = true; btn.textContent = 'Зберігаю...';
 
-    const { error } = await sb.from('candidates').update({
+    const { error } = await sb.rpc('update_candidate_by_token', { p_token: token, p_data: {
       enneagram_type: dominantType,
       enneagram_percentages: percentages,
       enneagram_summary: summary,
       enneagram_completed_at: new Date().toISOString()
-    }).eq('test_link_token', token);
+    } });
 
     if (error) {
       document.getElementById('testErr').textContent = '✗ ' + error.message;

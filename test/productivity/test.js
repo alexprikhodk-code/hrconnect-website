@@ -25,11 +25,7 @@
   } catch (e) {}
 
   async function loadCandidate() {
-    const { data, error } = await sb
-      .from('candidates')
-      .select('id, name, position, points, test_link_token')
-      .eq('test_link_token', token)
-      .maybeSingle();
+    const { data, error } = await sb.rpc('get_candidate_by_token', { p_token: token });
     if (error || !data) {
       showError('Посилання недійсне або тест уже видалений.');
       return;
@@ -230,7 +226,7 @@
     btn.disabled = true;
     btn.textContent = 'Зберігаю...';
 
-    const { error } = await sb.from('candidates').update(update).eq('test_link_token', token);
+    const { error } = await sb.rpc('update_candidate_by_token', { p_token: token, p_data: update });
     if (error) {
       document.getElementById('persErr').textContent = '✗ Не вдалося зберегти: ' + error.message;
       btn.disabled = false;
