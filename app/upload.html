@@ -179,6 +179,10 @@ console.log('[AI-Resume] upload.html version: 2026-06-16-v3 (verbose logging ena
 
 let extractedText = '';
 
+function escapeHtml(s) {
+  return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 document.getElementById('pastedText').addEventListener('input', e => {
   extractedText = e.target.value;
   showPreview(extractedText);

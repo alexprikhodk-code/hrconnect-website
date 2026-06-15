@@ -24,7 +24,7 @@ const SYSTEM_PROMPT = `Ти — HR-аналітик платформи AI-HRconn
 - Це АНАЛІЗ НА ОСНОВІ РЕЗЮМЕ, не повноцінне тестування. Confidence знижуй на 1 рівень порівняно з тестом.
 - НЕ вигадуй цифр, яких немає. Якщо в резюме мало даних — пиши "недостатньо даних", занижуй впевненість.
 - Усі тексти ВИКЛЮЧНО українською мовою.
-- Відповідай ТІЛЬКИ валідним JSON без додаткових пояснень навколо. Без markdown-блоків.
+- Відповідай ВИКЛЮЧНО валідним JSON без жодного тексту до або після. Без \u0060\u0060\u0060 блоків. Без preamble. Без коментарів. Тільки JSON-об'єкт, який починається з { і закінчується }.
 
 Структура відповіді:
 {
@@ -131,16 +131,37 @@ ${resume_text.slice(0, 25000)}
 
     const result = await aiResp.json();
     const rawText = result.content?.[0]?.text || "";
-    // Extract JSON (model sometimes wraps in code blocks despite instructions)
-    let jsonStr = rawText.trim();
-    const fence = jsonStr.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
-    if (fence) jsonStr = fence[1].trim();
+    console.log("AI raw response length:", rawText.length, "preview:", rawText.slice(0, 200));
 
-    let analysis;
-    try {
-      analysis = JSON.parse(jsonStr);
-    } catch (e) {
-      return new Response(JSON.stringify({ error: "AI returned non-JSON", raw: rawText.slice(0, 1500) }), {
+    // Aggressive JSON extraction — handle multiple wrapping styles
+    function extractJson(text: string): any {
+      let candidates: string[] = [];
+      // 1) Try whole text as JSON
+      candidates.push(text.trim());
+      // 2) Try inside ```json ... ``` block
+      const fence = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+      if (fence) candidates.push(fence[1].trim());
+      // 3) Try slicing from first { to last }
+      const firstBrace = text.indexOf("{");
+      const lastBrace = text.lastIndexOf("}");
+      if (firstBrace >= 0 && lastBrace > firstBrace) {
+        candidates.push(text.slice(firstBrace, lastBrace + 1));
+      }
+      // Try each candidate
+      for (const c of candidates) {
+        try { return JSON.parse(c); } catch (e) { /* try next */ }
+      }
+      return null;
+    }
+
+    const analysis = extractJson(rawText);
+    if (!analysis) {
+      console.error("Could not parse JSON from AI response. Raw:", rawText.slice(0, 1500));
+      return new Response(JSON.stringify({
+        error: "AI повернув не-JSON. Можливо, модель додала пояснення навколо JSON або не зрозуміла формат.",
+        raw_preview: rawText.slice(0, 1500),
+        model_used: MODEL
+      }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
