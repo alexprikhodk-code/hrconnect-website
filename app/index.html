@@ -374,6 +374,18 @@ document.getElementById('search').oninput = render;
     document.getElementById('tierBadge').innerHTML = '<span class="tier-badge ' + tierCls + '">' + sub.tier.toUpperCase() + '</span>';
     document.getElementById('quota').textContent = 'Тестів: ' + sub.tests_used_this_month + ' / ' + sub.tests_quota + ' цього місяця';
   }
+
+  // === Load candidates ===
+  const { data, error } = await sb.from('candidates').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error('Candidates load error:', error);
+    document.getElementById('emptyState').style.display = 'block';
+    document.getElementById('emptyState').innerHTML = '<h3>Помилка завантаження</h3><p>' + (error.message || 'Спробуйте оновити сторінку') + '</p>';
+    return;
+  }
+  candidatesData = data || [];
+  updateToolbar();
+  render();
 })();
 </script>
 <script src="/assets/js/ux.js"></script>
