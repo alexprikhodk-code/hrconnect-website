@@ -133,6 +133,10 @@
     }).catch(err => console.warn('Notify failed:', err));
     document.getElementById('testScreen').style.display = 'none';
     document.getElementById('doneScreen').style.display = 'block';
+    const _hubUrl = '/test/?t=' + token;
+    const _backLink = document.getElementById('manualBackLink');
+    if (_backLink) _backLink.href = _hubUrl;
+    setTimeout(() => { window.location.href = _hubUrl; }, 1800);
     document.getElementById('timerBox').style.display = 'none';
   }
 

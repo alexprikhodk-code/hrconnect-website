@@ -195,19 +195,21 @@ function verdictPill(c) {
   return `<div><span class="test-pill ${rec.cls}" style="font-weight:700">${rec.icon} ${esc(rec.text)}</span></div>`;
 }
 
-// TESTS PROGRESS column — now shows count + %
+// TESTS PROGRESS column — shows count + % across ASSIGNED tests only
 function testsStatusCell(c) {
-  const tests = [
-    { done: c.test_status === 'completed' || !!c.raw_answers, icon: '📋' },
-    { done: c.enneagram_type != null,                          icon: '🌀' },
-    { done: !!c.disc_dominant,                                  icon: '📊' },
-    { done: !!c.bigfive_dominant,                               icon: '🌌' },
-    { done: c.iq != null,                                       icon: '🧠' },
-    { done: c.reproduction != null,                             icon: '👁️' }
-  ];
+  const ALL_TESTS = {
+    productivity: { done: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0), icon: '📋' },
+    enneagram:    { done: c.enneagram_type != null,    icon: '🌀' },
+    disc:         { done: !!c.disc_dominant,           icon: '📊' },
+    bigfive:      { done: !!c.bigfive_dominant,        icon: '🌌' },
+    iq:           { done: c.iq != null,                icon: '🧠' },
+    reproduction: { done: c.reproduction != null,      icon: '👁️' }
+  };
+  const assigned = (c.assigned_tests && c.assigned_tests.length) ? c.assigned_tests : Object.keys(ALL_TESTS);
+  const tests = assigned.map(k => ALL_TESTS[k]).filter(Boolean);
   const completed = tests.filter(t => t.done).length;
   const total = tests.length;
-  const pct = Math.round(completed / total * 100);
+  const pct = total > 0 ? Math.round(completed / total * 100) : 0;
   const pillCls = completed === total ? 'green' : (completed === 0 ? 'gray' : 'amber');
   let icons = tests.map(t => `<span style="font-size:13px; opacity:${t.done ? 1 : 0.25}">${t.icon}</span>`).join(' ');
   return `<div><span class="test-pill ${pillCls}">${completed}/${total} · ${pct}%</span><div style="margin-top:4px; display:flex; gap:3px">${icons}</div></div>`;

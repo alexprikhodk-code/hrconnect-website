@@ -48,7 +48,11 @@
     hideAll();
     if (name === 'welcome') { document.getElementById('welcomeScreen').style.display = 'block'; updateProgress(0); }
     else if (name === 'test') { renderTest(); document.getElementById('testScreen').style.display = 'block'; updateProgress(50); window.scrollTo(0,0); }
-    else if (name === 'done') { document.getElementById('doneScreen').style.display = 'block'; updateProgress(100); }
+    else if (name === 'done') { document.getElementById('doneScreen').style.display = 'block';
+    const _hubUrl = '/test/?t=' + token;
+    const _backLink = document.getElementById('manualBackLink');
+    if (_backLink) _backLink.href = _hubUrl;
+    setTimeout(() => { window.location.href = _hubUrl; }, 1800); updateProgress(100); }
   };
 
   function renderTest() {

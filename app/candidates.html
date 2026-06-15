@@ -67,6 +67,21 @@
         <label class="form-label">Посада, на яку розглядаєте</label>
         <input type="text" class="form-input" id="invPosition">
       </div>
+      <div class="form-group">
+        <label class="form-label">Призначити тести</label>
+        <div class="tests-picker" id="testsPicker">
+          <label class="test-check on"><input type="checkbox" value="productivity" checked> <span class="ic">📋</span> Продуктивність</label>
+          <label class="test-check on"><input type="checkbox" value="enneagram" checked> <span class="ic">🌀</span> Еннеаграма</label>
+          <label class="test-check on"><input type="checkbox" value="disc" checked> <span class="ic">📊</span> DISC</label>
+          <label class="test-check on"><input type="checkbox" value="bigfive" checked> <span class="ic">🌌</span> Big Five</label>
+          <label class="test-check on"><input type="checkbox" value="iq" checked> <span class="ic">🧠</span> IQ</label>
+          <label class="test-check on"><input type="checkbox" value="reproduction" checked> <span class="ic">👁️</span> Відтворення</label>
+        </div>
+        <div class="picker-actions">
+          <button type="button" onclick="pickerAll(true)">Усі</button>
+          <button type="button" onclick="pickerAll(false)">Скинути</button>
+        </div>
+      </div>
       <div class="form-error" id="invErr"></div>
       <div style="display:flex; gap:10px">
         <button type="submit" class="btn btn-primary">Створити</button>
@@ -95,6 +110,11 @@ document.getElementById('inviteForm').onsubmit = async (e) => {
   e.preventDefault();
   const user = await currentUser();
   const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
+  const assignedTests = Array.from(document.querySelectorAll('#testsPicker input:checked')).map(i => i.value);
+  if (assignedTests.length === 0) {
+    alert('Оберіть хоча б один тест для призначення.');
+    return;
+  }
   const { data, error } = await sb.from('candidates').insert({
     user_id: user.id,
     name: document.getElementById('invName').value.trim(),
@@ -102,7 +122,8 @@ document.getElementById('inviteForm').onsubmit = async (e) => {
     phone: document.getElementById('invPhone').value.trim() || null,
     position: document.getElementById('invPosition').value.trim() || null,
     test_link_token: token,
-    test_status: 'pending'
+    test_status: 'pending',
+    assigned_tests: assignedTests
   }).select().single();
   if (error) { document.getElementById('invErr').textContent = error.message; return; }
 
@@ -130,11 +151,6 @@ async function refresh() {
     '</tr></thead><tbody>' +
     cands.map(c => {
       const url = c.test_link_token ? (window.location.origin + '/test/?t=' + c.test_link_token) : '';
-      const ennUrl = c.test_link_token ? (window.location.origin + '/test/enneagram/?t=' + c.test_link_token) : '';
-      const discUrl = c.test_link_token ? (window.location.origin + '/test/disc/?t=' + c.test_link_token) : '';
-      const bfUrl   = c.test_link_token ? (window.location.origin + '/test/bigfive/?t=' + c.test_link_token) : '';
-      const iqUrl   = c.test_link_token ? (window.location.origin + '/test/iq/?t=' + c.test_link_token) : '';
-      const repUrl  = c.test_link_token ? (window.location.origin + '/test/reproduction/?t=' + c.test_link_token) : '';
       // Compute test completion progress
       const tests = [
         c.test_status === 'completed' || !!c.raw_answers,  // main

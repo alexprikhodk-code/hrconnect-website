@@ -1,4 +1,4 @@
-// AI-HRconnect — test page logic
+// AI-HRconnect — productivity test (moved from /test/)
 (function () {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('t');
@@ -6,88 +6,75 @@
   let prodAnswers = {};
   let persAnswers = {};
 
-  // Render brand logo
   document.getElementById('logoSlot').innerHTML = brandLogoSvg(28);
 
+  const hubUrl = '/test/?t=' + (token || '');
+  document.getElementById('backToHub').href = hubUrl;
+  document.getElementById('backToHub2').href = hubUrl;
+
   if (!token) {
-    showError('У посиланні немає коду тесту. Перевірте URL.');
+    showError('У посиланні немає коду тесту.');
     return;
   }
 
-  // Resume state from localStorage (per token)
-  const stateKey = 'aihr_test_' + token;
+  const stateKey = 'aihr_prod_' + token;
   try {
     const saved = JSON.parse(localStorage.getItem(stateKey) || '{}');
     prodAnswers = saved.prod || {};
     persAnswers = saved.pers || {};
   } catch (e) {}
 
-  // Load candidate by token
   async function loadCandidate() {
     const { data, error } = await sb
       .from('candidates')
-      .select('id, name, position, test_status, test_link_token')
+      .select('id, name, position, points, test_link_token')
       .eq('test_link_token', token)
       .maybeSingle();
     if (error || !data) {
       showError('Посилання недійсне або тест уже видалений.');
       return;
     }
-    if (data.test_status === 'completed') {
-      showError('Цей тест уже пройдено. Дякуємо!');
+    // If productivity already done — redirect back to hub
+    if (data.points && Object.keys(data.points).length > 0) {
+      window.location.href = hubUrl;
       return;
     }
     candidate = data;
-    document.getElementById('candidateName').textContent = data.name || '';
-    document.getElementById('welcomePosition').textContent = data.position || '—';
     hideAll();
-    document.getElementById('welcomeScreen').style.display = 'block';
-    updateProgress(0);
+    renderProductivity();
+    document.getElementById('productivityScreen').style.display = 'block';
+    updateProgress(25);
   }
-
   loadCandidate();
 
-  // ============ Screens ============
   function hideAll() {
-    ['loaderScreen', 'welcomeScreen', 'productivityScreen', 'personalityScreen', 'doneScreen', 'errorScreen']
+    ['loaderScreen', 'productivityScreen', 'personalityScreen', 'doneScreen', 'errorScreen']
       .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   }
-
   function showError(msg) {
     hideAll();
     document.getElementById('errorMsg').textContent = msg;
     document.getElementById('errorScreen').style.display = 'block';
-    document.getElementById('progressLabel').textContent = '';
-    document.getElementById('progressBar').style.width = '0%';
   }
-
   function updateProgress(pct) {
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = 'Прогрес: ' + Math.round(pct) + '%';
+    document.getElementById('progressBar') && (document.getElementById('progressBar').style.width = pct + '%');
   }
 
   window.goToScreen = function (name) {
     hideAll();
-    if (name === 'welcome') {
-      document.getElementById('welcomeScreen').style.display = 'block';
-      updateProgress(0);
-    } else if (name === 'productivity') {
+    if (name === 'productivity') {
       renderProductivity();
       document.getElementById('productivityScreen').style.display = 'block';
-      updateProgress(25);
       window.scrollTo(0, 0);
     } else if (name === 'personality') {
       renderPersonality();
       document.getElementById('personalityScreen').style.display = 'block';
-      updateProgress(65);
       window.scrollTo(0, 0);
     } else if (name === 'done') {
       document.getElementById('doneScreen').style.display = 'block';
-      updateProgress(100);
     }
   };
 
-  // ============ Productivity render ============
   function renderProductivity() {
     const container = document.getElementById('productivityQs');
     container.innerHTML = PRODUCTIVITY_QUESTIONS.map((q, i) => {
@@ -115,15 +102,10 @@
       </div>`;
     }).join('');
 
-    // Bind change handlers
     container.querySelectorAll('[data-key]').forEach(el => {
-      el.addEventListener('input', () => {
-        prodAnswers[el.dataset.key] = el.value;
-        persist();
-      });
+      el.addEventListener('input', () => { prodAnswers[el.dataset.key] = el.value; persist(); });
       el.addEventListener('change', () => {
         prodAnswers[el.dataset.key] = el.value;
-        // For radio: highlight the row
         if (el.type === 'radio') {
           container.querySelectorAll(`input[name="${el.name}"]`).forEach(r => r.closest('.radio-row').classList.toggle('checked', r.checked));
         }
@@ -134,12 +116,9 @@
 
   window.submitProductivity = function () {
     document.getElementById('prodErr').textContent = '';
-    // Validate required: at least first 6 must be filled
     const missing = [];
     PRODUCTIVITY_QUESTIONS.slice(0, 6).forEach((q, i) => {
-      if (!prodAnswers[q.key] || prodAnswers[q.key].trim().length < 1) {
-        missing.push(i + 1);
-      }
+      if (!prodAnswers[q.key] || prodAnswers[q.key].trim().length < 1) missing.push(i + 1);
     });
     if (missing.length) {
       document.getElementById('prodErr').textContent = 'Будь ласка, дайте відповідь на питання: ' + missing.join(', ');
@@ -149,7 +128,6 @@
     goToScreen('personality');
   };
 
-  // ============ Personality render ============
   function renderPersonality() {
     const container = document.getElementById('personalityQs');
     container.innerHTML = PERSONALITY_QUESTIONS.map((q, i) => {
@@ -162,22 +140,18 @@
         </div>
       </div>`;
     }).join('');
-
     container.querySelectorAll('.yn-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const key = btn.dataset.key;
         persAnswers[key] = btn.dataset.val;
-        // Toggle visual
         container.querySelectorAll(`.yn-btn[data-key="${key}"]`).forEach(b => b.classList.toggle('checked', b.dataset.val === btn.dataset.val));
         persist();
       });
     });
   }
 
-  // ============ Submit final ============
   window.submitAll = async function () {
     document.getElementById('persErr').textContent = '';
-    // Validate: all personality questions answered
     const missing = PERSONALITY_QUESTIONS.filter(q => !persAnswers[q.key]);
     if (missing.length) {
       document.getElementById('persErr').textContent = 'Будь ласка, дайте відповідь на всі питання (залишилось ' + missing.length + ').';
@@ -185,33 +159,27 @@
       return;
     }
 
-    // Compute personality scores
     const points = {};
     Object.keys(TRAIT_LABELS).forEach(t => { points[t] = { label: TRAIT_LABELS[t], score: 0, level: '', thesis: '', full: '' }; });
     PERSONALITY_QUESTIONS.forEach(q => {
       const yes = persAnswers[q.key] === 'yes';
-      // direction +1 (positive trait statement): Yes=+35, No=-10
-      // direction -1 (negative trait statement): Yes=-35, No=+10
       let delta;
       if (q.direction > 0) delta = yes ? 35 : -10;
       else delta = yes ? -35 : 10;
       points[q.trait].score += delta;
       points[q.trait].agree_count = (points[q.trait].agree_count || 0) + (yes ? 1 : 0);
     });
-    // Track ambiguity: if both yes or both no on same trait → flag
     Object.keys(points).forEach(t => {
       const traitQs = PERSONALITY_QUESTIONS.filter(q => q.trait === t);
       const yesCount = traitQs.filter(q => persAnswers[q.key] === 'yes').length;
       points[t].ambiguous = (yesCount === 0 || yesCount === traitQs.length);
     });
-    // Clamp -100..100 and assign level
     Object.keys(points).forEach(t => {
       const s = Math.max(-100, Math.min(100, points[t].score));
       points[t].score = s;
       points[t].level = s <= -19 ? 'Низький' : (s < 32 ? 'Середній' : 'Високий');
     });
 
-    // Compute verdict from productivity answers (same logic as candidate.html)
     const a = prodAnswers;
     let vScore = 0;
     const vReasons = [];
@@ -247,20 +215,17 @@
     else if (vScore >= 0) { verdict = 'Делатель'; verdict_confidence = 'помірна'; }
     else { verdict = 'Делатель'; verdict_confidence = 'висока'; }
 
-    // Build payload
     const update = {
-      test_status: 'completed',
-      test_completed_at: new Date().toISOString(),
       raw_answers: prodAnswers,
       product_self: prodAnswers.product || null,
       points: points,
       verdict: verdict,
       verdict_confidence: verdict_confidence,
       verdict_score: vScore,
-      verdict_reasons: vReasons
+      verdict_reasons: vReasons,
+      productivity_completed_at: new Date().toISOString()
     };
 
-    // Disable button
     const btn = event.target;
     btn.disabled = true;
     btn.textContent = 'Зберігаю...';
@@ -273,21 +238,13 @@
       return;
     }
 
-    // Cleanup local state
     localStorage.removeItem(stateKey);
-
-    // Fire-and-forget email notification to HR (won't block UX if it fails)
-    sb.functions.invoke('notify-test-complete', {
-      body: { candidate_id: candidate.id, test_type: 'main' }
-    }).catch(err => console.warn('Email notification failed (non-blocking):', err));
-
     goToScreen('done');
+    document.getElementById('manualBack').href = hubUrl;
+    setTimeout(() => { window.location.href = hubUrl; }, 1500);
   };
 
-  // ============ Helpers ============
-  function persist() {
-    localStorage.setItem(stateKey, JSON.stringify({ prod: prodAnswers, pers: persAnswers }));
-  }
+  function persist() { localStorage.setItem(stateKey, JSON.stringify({ prod: prodAnswers, pers: persAnswers })); }
   function escapeHTML(s) {
     return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
