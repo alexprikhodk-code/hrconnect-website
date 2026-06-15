@@ -21,10 +21,11 @@
 .drop-zone .ic { font-size: 42px; line-height: 1; margin-bottom: 10px; }
 .drop-zone .ttl { font-size: 15px; font-weight: 700; color: var(--c-brand); }
 .drop-zone .sub { font-size: 12.5px; color: var(--c-muted); margin-top: 4px; }
-.drop-zone input[type=file] { display: none; }
+.drop-zone input[type=file] { position: absolute; left: -9999px; opacity: 0; width: 0; height: 0; overflow: hidden; pointer-events: none; }
 
 .tab-row { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--c-line); }
-.tab-btn { background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
+.tab-btn { background: none; border: none; outline: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
+.tab-btn:focus { outline: none; }
 .tab-btn.active { color: var(--c-brand); border-bottom-color: var(--c-brand); }
 
 .preview-text { background: #f1f5f9; border-radius: 8px; padding: 14px 16px; font-size: 12px; line-height: 1.5; max-height: 220px; overflow-y: auto; white-space: pre-wrap; color: #475569; margin-top: 10px; font-family: ui-monospace, SF Mono, monospace; }
@@ -66,7 +67,7 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
 <div class="app-shell">
   <aside class="app-side">
     <div class="logo" id="sideLogo"></div>
-    <a href="/" class="nav-item" style="margin-bottom:10px; opacity:0.85; font-size:13px">🏠 На головну сторінку сайта</a>
+    <a href="/" class="nav-item">🏠 На головну сторінку сайта</a>
     <div class="nav-section">Робота з кандидатами</div>
     <a href="/app/" class="nav-item">📊 Дашборд</a>
     <a href="/app/candidates.html" class="nav-item">👥 Кандидати</a>
@@ -101,7 +102,7 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
           <div id="tab-file">
             <label class="drop-zone" id="dropZone">
               <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt">
-              <div class="ic">📄</div>
+              
               <div class="ttl">Перетягніть резюме сюди або клікніть для вибору</div>
               <div class="sub">PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.</div>
             </label>
