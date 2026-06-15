@@ -69,6 +69,25 @@
 .reasons-list li { margin: 4px 0; line-height: 1.5; }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--c-muted); }
+
+/* === Tests strip (like PDF executive summary) === */
+.tests-strip-card { background: white; border-radius: 14px; padding: 20px 24px; margin-bottom: 18px; box-shadow: var(--shadow-sm); }
+.ts-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-weight: 700; font-size: 14px; color: var(--c-brand); text-transform: uppercase; letter-spacing: 0.04em; }
+.ts-count { font-size: 12px; font-weight: 600; color: var(--c-muted); text-transform: none; letter-spacing: 0; }
+.ts-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+@media (max-width: 900px) { .ts-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { .ts-grid { grid-template-columns: repeat(2, 1fr); } }
+.ts-card { display: flex; flex-direction: column; align-items: center; padding: 14px 8px 12px; border-radius: 10px; text-align: center; text-decoration: none; transition: all .15s; min-height: 110px; justify-content: space-between; }
+.ts-card.done { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1.5px solid #86efac; box-shadow: 0 2px 8px rgba(34,197,94,.12); }
+.ts-card.done:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34,197,94,.2); }
+.ts-card.pending { background: #f8fafc; border: 1.5px dashed #cbd5e1; opacity: 0.7; }
+.ts-ic { font-size: 24px; line-height: 1; margin-bottom: 4px; }
+.ts-name { font-size: 12px; font-weight: 700; color: #0f172a; }
+.ts-res { font-size: 11px; color: #166534; font-weight: 600; margin-top: 3px; line-height: 1.3; }
+.ts-card-tag { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-top: 6px; background: #16a34a; color: white; }
+.ts-card-tag.pending { background: #e2e8f0; color: #64748b; }
+.ts-note { margin-top: 14px; padding: 10px 14px; background: #f1f5f9; border-left: 3px solid var(--c-brand); border-radius: 6px; font-size: 12.5px; color: #475569; line-height: 1.5; }
+.ts-note.warn { background: #fef3c7; border-left-color: #f59e0b; color: #78350f; }
 </style>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -376,6 +395,24 @@ function render(c) {
   const statusCls = c.test_status === 'completed' ? 'completed' : 'pending';
   const statusTxt = c.test_status === 'completed' ? '✓ Тест завершено' : '⏳ Очікує на проходження';
 
+  // Determine which tests are completed
+  const TEST_LIST = [
+    { id: 'productivity', ic: '📋', name: 'Продуктивність', done: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0), result: v.verdict ? v.label : null, url: '#productivity' },
+    { id: 'enneagram',    ic: '🌀', name: 'Еннеаграма',     done: c.enneagram_type != null, result: c.enneagram_type ? 'Тип ' + c.enneagram_type : null, url: '/app/enneagram.html?id=' + c.id },
+    { id: 'disc',         ic: '📊', name: 'DISC',            done: !!c.disc_dominant,        result: c.disc_profile || c.disc_dominant || null, url: '/app/disc.html?id=' + c.id },
+    { id: 'bigfive',      ic: '🌌', name: 'Big Five',        done: !!c.bigfive_dominant,     result: c.bigfive_dominant || null, url: '/app/bigfive.html?id=' + c.id },
+    { id: 'iq',           ic: '🧠', name: 'IQ',              done: c.iq != null,             result: c.iq != null ? c.iq + (c.iq_band ? ' · ' + c.iq_band : '') : null, url: '#iq' },
+    { id: 'reproduction', ic: '👁️', name: 'Відтворення',     done: c.reproduction != null,   result: c.reproduction != null ? c.reproduction + '%' : null, url: '#repr' }
+  ];
+  const assigned = (c.assigned_tests && c.assigned_tests.length) ? c.assigned_tests : TEST_LIST.map(t => t.id);
+  const visibleTests = TEST_LIST.filter(t => assigned.includes(t.id));
+  const completedTests = visibleTests.filter(t => t.done);
+  const completedNames = completedTests.map(t => t.name).join(', ');
+  const verdictBasis = completedTests.filter(t => t.id === 'productivity').length > 0
+    ? `Вердикт сформовано на основі: <strong>${completedNames || 'тесту продуктивності'}</strong>.`
+    : `Вердикт ще не сформовано — потрібен тест на продуктивність.`;
+  const partial = completedTests.length < visibleTests.length;
+
   // Hero
   let html = `
     <div class="cand-hero">
@@ -384,18 +421,35 @@ function render(c) {
         <div class="meta">${esc(c.position || 'Посада не вказана')}${c.email ? ' · ' + esc(c.email) : ''}${c.phone ? ' · ' + esc(c.phone) : ''}</div>
         <span class="cand-status ${statusCls}">${statusTxt}</span>
         ${c.test_completed_at ? `<span style="color:var(--c-muted); font-size:12px; margin-left:10px">${new Date(c.test_completed_at).toLocaleString('uk-UA')}</span>` : ''}
-        <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap">
-          <a href="/app/enneagram.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌀 ${c.enneagram_type != null ? 'Еннеаграма: Тип ' + c.enneagram_type : 'Еннеаграма'}</a>
-          <a href="/app/disc.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">📊 ${c.disc_dominant ? 'DISC: ' + (c.disc_profile || c.disc_dominant) : 'DISC'}</a>
-          <a href="/app/bigfive.html?id=${c.id}" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🌌 ${c.bigfive_dominant ? 'Big Five: ' + c.bigfive_dominant : 'Big Five'}</a>
-          <a href="/test/iq/?t=${c.test_link_token || ''}" target="_blank" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">🧠 ${c.iq != null ? 'IQ: ' + c.iq : 'IQ-тест'}</a>
-          <a href="/test/reproduction/?t=${c.test_link_token || ''}" target="_blank" class="btn btn-ghost" style="font-size:12px; padding:6px 12px">👁️ ${c.reproduction != null ? 'Відтворення: ' + c.reproduction + '%' : 'Відтворення'}</a>
-        </div>
       </div>
       <div class="big-verdict ${vcls}">
         <div class="lbl">Вердикт</div>
         <div class="val">${esc(v.label)}</div>
         <div class="conf">впевненість: ${esc(v.confidence)}</div>
+      </div>
+    </div>
+
+    <!-- Tests strip — like dashboard / PDF executive summary -->
+    <div class="tests-strip-card">
+      <div class="ts-title">
+        <span>📦 Тести кандидата</span>
+        <span class="ts-count">${completedTests.length} з ${visibleTests.length} пройдено</span>
+      </div>
+      <div class="ts-grid">
+        ${visibleTests.map(t => {
+          const cls = t.done ? 'done' : 'pending';
+          const tag = t.done ? '<span class="ts-card-tag">✓ пройдено</span>' : '<span class="ts-card-tag pending">не пройдено</span>';
+          return `<${t.done ? 'a' : 'div'} ${t.done && !t.url.startsWith('#') ? 'href="' + t.url + '"' : ''} class="ts-card ${cls}">
+            <div class="ts-ic">${t.ic}</div>
+            <div class="ts-name">${t.name}</div>
+            ${t.result ? `<div class="ts-res">${esc(String(t.result))}</div>` : ''}
+            ${tag}
+          </${t.done ? 'a' : 'div'}>`;
+        }).join('')}
+      </div>
+      <div class="ts-note ${partial ? 'warn' : ''}">
+        ${partial ? '⚠ ' : 'ℹ '} ${verdictBasis}
+        ${partial && completedTests.find(t => t.id === 'productivity') ? ' Решта тестів дозволять уточнити картину та виявити ризики, які один тест не показує.' : ''}
       </div>
     </div>
   `;
@@ -446,7 +500,6 @@ function render(c) {
         <div class="desc">${esc(hire.recReason)}</div>
         ${hire.strengths.length ? '<div style="margin-top:10px"><strong style="font-size:12px; color:#166534">Сильні сторони:</strong><br>' + hire.strengths.map(s => '<span class="strength-tag">+ ' + esc(s) + '</span>').join('') + '</div>' : ''}
         ${hire.risks.length ? '<div style="margin-top:8px"><strong style="font-size:12px; color:#991b1b">Ризики:</strong><br>' + hire.risks.map(r => '<span class="risk-tag">! ' + esc(r) + '</span>').join('') + '</div>' : ''}
-        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed rgba(15,30,50,0.18); font-size: 11.5px; color: #4a5566; line-height: 1.5; font-style: italic;">
           ℹ Результати тестів мають рекомендаційний характер. Остаточне рішення про найм приймається безпосередньо вами після особистої співбесіди з кандидатом.
         </div>
       </div>

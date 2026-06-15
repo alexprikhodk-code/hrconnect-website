@@ -47,9 +47,9 @@
   </main>
 </div>
 
-<div id="modal" style="display:none; position:fixed; inset:0; background:rgba(15,30,50,0.55); z-index:100; align-items:center; justify-content:center;">
-  <div class="card" style="max-width:480px; width:90%">
-    <h3 style="margin-top:0">Новий кандидат</h3>
+<div id="modal" style="display:none; position:fixed; inset:0; background:rgba(15,30,50,0.55); z-index:100; align-items:center; justify-content:center; overflow-y:auto; padding:20px 0">
+  <div class="card" style="max-width:460px; width:90%; max-height:90vh; overflow-y:auto; padding:20px 24px">
+    <h3 style="margin:0 0 14px; font-size:18px">Новий кандидат</h3>
     <form id="inviteForm">
       <div class="form-group">
         <label class="form-label">Імʼя кандидата</label>
@@ -69,7 +69,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Призначити тести</label>
-        <div id="testsPicker" style="display:flex; flex-direction:column; gap:6px; margin-top:6px"></div>
+        <div id="testsPicker" style="display:flex; flex-direction:column; gap:5px; margin-top:6px"></div>
         <div style="display:flex; gap:8px; margin-top:8px">
           <button type="button" id="pickAllBtn" style="background:none; border:1px solid var(--c-line); border-radius:6px; padding:5px 12px; cursor:pointer; font-size:12px; color:var(--c-muted)">Усі</button>
           <button type="button" id="pickNoneBtn" style="background:none; border:1px solid var(--c-line); border-radius:6px; padding:5px 12px; cursor:pointer; font-size:12px; color:var(--c-muted)">Скинути</button>
@@ -108,7 +108,7 @@ function renderPicker() {
   if (!wrap) return;
   wrap.innerHTML = PICKER_TESTS.map((t, i) => {
     const on = pickerState[t.id] !== false;
-    return `<div data-id="${t.id}" class="pick-row" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid ${on ? '#1f4e78' : '#e4e8ee'}; background:${on ? '#eff6fb' : 'white'}; border-radius:8px; cursor:pointer; font-size:14px; user-select:none; transition:all .15s">
+    return `<div data-id="${t.id}" class="pick-row" style="display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid ${on ? '#1f4e78' : '#e4e8ee'}; background:${on ? '#eff6fb' : 'white'}; border-radius:8px; cursor:pointer; font-size:14px; user-select:none; transition:all .15s">
       <span style="color:${on ? '#1f4e78' : '#94a3b8'}; font-weight:700; min-width:24px">${i + 1})</span>
       <span style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:4px; border:2px solid ${on ? '#16a34a' : '#cbd5e1'}; background:${on ? '#16a34a' : 'white'}; color:white; font-size:13px; font-weight:900; flex-shrink:0">${on ? '✓' : ''}</span>
       <span style="font-size:18px; line-height:1">${t.ic}</span>
@@ -232,7 +232,4 @@ function copyLink(btn, url) {
 
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-(async () => { await requireAuth(); refresh(); })();
-</script>
-<script src="/assets/js/ux.js"></script>
-</body></html>
+(async () => { await requireAuth()
