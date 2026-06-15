@@ -21,7 +21,7 @@
 .drop-zone .ic { font-size: 42px; line-height: 1; margin-bottom: 10px; }
 .drop-zone .ttl { font-size: 15px; font-weight: 700; color: var(--c-brand); }
 .drop-zone .sub { font-size: 12.5px; color: var(--c-muted); margin-top: 4px; }
-.drop-zone input[type=file] { position: absolute; left: -9999px; opacity: 0; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 
 .tab-row { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--c-line); }
 .tab-btn { background: none; border: none; outline: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
@@ -100,9 +100,8 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
           </div>
 
           <div id="tab-file">
-            <label class="drop-zone" id="dropZone">
-              <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt">
-              
+            <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" class="visually-hidden">
+            <label for="fileInput" class="drop-zone" id="dropZone">
               <div class="ttl">Перетягніть резюме сюди або клікніть для вибору</div>
               <div class="sub">PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.</div>
             </label>
