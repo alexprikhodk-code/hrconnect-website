@@ -232,4 +232,9 @@ function copyLink(btn, url) {
 
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-(async () => { await requireAuth()
+(async () => { await requireAuth();
+    refresh();
+  })();
+</script>
+<script src="/assets/js/ux.js"></script>
+</body></html>
