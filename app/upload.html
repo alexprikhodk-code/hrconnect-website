@@ -251,78 +251,120 @@ function togglePaste() {
 }
 
 async function runAnalysis() {
-  const err = document.getElementById('errBox'); err.innerHTML = '';
+  console.log('[AI-Resume] runAnalysis started');
+  const err = document.getElementById('errBox');
   const btn = document.getElementById('analyzeBtn');
   const loader = document.getElementById('loadingCard');
   const resultCard = document.getElementById('resultCard');
+  err.innerHTML = '';
   resultCard.classList.remove('show');
 
+  // Defensive: button might be clicked despite disabled state
   if (extractedText.trim().length < 100) {
-    err.innerHTML = '<div class="err-box">⚠ Текст резюме занадто короткий (потрібно мінімум 100 символів).</div>';
+    err.innerHTML = '<div class="err-box">⚠ Текст резюме занадто короткий (мінімум 100 символів). Завантажте резюме спочатку.</div>';
+    err.scrollIntoView({behavior:'smooth', block:'center'});
     return;
   }
 
   btn.disabled = true;
   loader.style.display = 'flex';
+  loader.scrollIntoView({behavior:'smooth', block:'center'});
 
+  let analysisResult = null;
   try {
     const positionContext = document.getElementById('positionContext').value.trim();
-    const { data, error } = await sb.functions.invoke('analyze-resume', {
+    console.log('[AI-Resume] Calling Edge Function with text length:', extractedText.length, 'position:', positionContext);
+
+    const fnResp = await sb.functions.invoke('analyze-resume', {
       body: { resume_text: extractedText, position_context: positionContext || null }
     });
-    if (error) throw new Error(error.message || 'Edge Function error');
-    if (data?.error) throw new Error(data.error + (data.details ? '\n' + JSON.stringify(data.details).slice(0, 400) : ''));
+    console.log('[AI-Resume] Edge Function response:', fnResp);
 
-    const analysis = data.analysis;
+    // Check for invoke-level error (function not found, network error)
+    if (fnResp.error) {
+      const msg = fnResp.error.message || String(fnResp.error);
+      if (msg.includes('not found') || msg.includes('404') || msg.includes('Function not found')) {
+        throw new Error('Edge Function "analyze-resume" не задеплоєна на Supabase. Зайди в Supabase Dashboard → Edge Functions → Deploy a new function, назви її analyze-resume і встав вміст файлу supabase/functions/analyze-resume/index.ts');
+      }
+      throw new Error('Edge Function error: ' + msg);
+    }
+
+    const data = fnResp.data;
+    if (!data) throw new Error('Edge Function повернула порожню відповідь');
+    if (data.error) {
+      let detail = '';
+      if (data.details) {
+        try { detail = ' · ' + (typeof data.details === 'string' ? data.details.slice(0,400) : JSON.stringify(data.details).slice(0,400)); }
+        catch(e){}
+      }
+      if (String(data.error).includes('ANTHROPIC_API_KEY')) {
+        throw new Error('Не сконфігуровано ANTHROPIC_API_KEY у Supabase → Edge Functions → Secrets. Додай ключ з console.anthropic.com');
+      }
+      throw new Error(data.error + detail);
+    }
+
+    analysisResult = data.analysis;
     const meta = data.meta;
-    if (!analysis || !analysis.verdict) throw new Error('AI повернув некоректний результат');
+    if (!analysisResult || !analysisResult.verdict) {
+      throw new Error('AI повернув некоректний результат — без verdict. Можливо, текст резюме надто короткий або непридатний.');
+    }
+    console.log('[AI-Resume] Analysis OK:', analysisResult);
 
-    // Save candidate
+    // Save as candidate
     const user = await currentUser();
+    if (!user) throw new Error('Не вдалося отримати поточного користувача');
+
     const token = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
     const candidatePayload = {
       user_id: user.id,
-      name: analysis.name || 'Без імені (з резюме)',
-      email: analysis.email || null,
-      phone: analysis.phone || null,
-      position: analysis.position || positionContext || null,
+      name: analysisResult.name || 'Без імені (з резюме)',
+      email: analysisResult.email || null,
+      phone: analysisResult.phone || null,
+      position: analysisResult.position || positionContext || null,
       test_link_token: token,
       test_status: 'pending',
-      test_completed_at: null,
       source: 'resume_ai',
       resume_text: extractedText.slice(0, 50000),
-      ai_analysis_meta: meta,
+      ai_analysis_meta: meta || null,
       assigned_tests: [],
-      product_self: analysis.product_self || null,
-      verdict: analysis.verdict,
-      verdict_confidence: analysis.verdict_confidence,
-      verdict_score: analysis.verdict_score,
-      verdict_reasons: analysis.verdict_reasons,
-      points: analysis.points || null,
-      iq: analysis.iq || null,
-      iq_band: analysis.iq_band || null,
-      iq_summary: analysis.iq_summary || null,
-            reproduction: analysis.reproduction || null,
-      reproduction_band: analysis.reproduction_band || null,
-      reproduction_summary: analysis.reproduction_summary || null,
-            enneagram_type: analysis.enneagram_type || null,
-      enneagram_summary: analysis.enneagram_summary || null,
-            disc_dominant: analysis.disc_dominant || null,
-      disc_profile: analysis.disc_profile || null,
-      disc_summary: analysis.disc_summary || null,
-            bigfive_dominant: analysis.bigfive_dominant || null,
-      bigfive_scores: analysis.bigfive_scores || null,
-      bigfive_summary: analysis.bigfive_summary || null,
-                };
+      product_self: analysisResult.product_self || null,
+      verdict: analysisResult.verdict,
+      verdict_confidence: analysisResult.verdict_confidence,
+      verdict_score: analysisResult.verdict_score,
+      verdict_reasons: analysisResult.verdict_reasons || null,
+      points: analysisResult.points || null,
+      iq: analysisResult.iq || null,
+      iq_band: analysisResult.iq_band || null,
+      iq_summary: analysisResult.iq_summary || null,
+      reproduction: analysisResult.reproduction || null,
+      reproduction_band: analysisResult.reproduction_band || null,
+      reproduction_summary: analysisResult.reproduction_summary || null,
+      enneagram_type: analysisResult.enneagram_type || null,
+      enneagram_summary: analysisResult.enneagram_summary || null,
+      disc_dominant: analysisResult.disc_dominant || null,
+      disc_profile: analysisResult.disc_profile || null,
+      disc_summary: analysisResult.disc_summary || null,
+      bigfive_dominant: analysisResult.bigfive_dominant || null,
+      bigfive_scores: analysisResult.bigfive_scores || null,
+      bigfive_summary: analysisResult.bigfive_summary || null
+    };
+
+    console.log('[AI-Resume] Saving candidate:', candidatePayload);
     const { data: cand, error: insErr } = await sb.from('candidates').insert(candidatePayload).select().single();
-    if (insErr) throw insErr;
+    if (insErr) {
+      console.error('[AI-Resume] Insert error:', insErr);
+      throw new Error('Помилка створення кандидата в БД: ' + (insErr.message || insErr.code || 'unknown'));
+    }
+    console.log('[AI-Resume] Candidate saved:', cand);
 
     loader.style.display = 'none';
-    showResult(analysis, cand);
+    showResult(analysisResult, cand);
   } catch (e) {
+    console.error('[AI-Resume] FAILED:', e);
     loader.style.display = 'none';
     btn.disabled = false;
-    err.innerHTML = '<div class="err-box">⚠ ' + escapeHtml(e.message || String(e)) + '</div>';
+    err.innerHTML = '<div class="err-box" style="font-size:13px; line-height:1.55">⚠ ' + escapeHtml(e.message || String(e)) + '</div>';
+    err.scrollIntoView({behavior:'smooth', block:'center'});
   }
 }
 
