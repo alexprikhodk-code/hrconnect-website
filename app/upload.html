@@ -22,6 +22,8 @@
 .drop-zone .ttl { font-size: 15px; font-weight: 700; color: var(--c-brand); }
 .drop-zone .sub { font-size: 12.5px; color: var(--c-muted); margin-top: 4px; }
 .visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; opacity: 0 !important; pointer-events: none !important; }
+#fileInput { display: none !important; }
+input[type=file]#fileInput { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; position: absolute !important; left: -99999px !important; top: -99999px !important; }
 
 .tab-row { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--c-line); }
 .tab-btn { background: none; border: none; outline: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
