@@ -210,7 +210,7 @@ function render(candidates) {
 
   // === GROUP 2: Основний тест ===
   rows += `<tr class="group-row"><td colspan="${candidates.length + 1}">Основний тест — Продуктивність</td></tr>`;
-  rows += `<tr><td class="sticky-col">Вердикт</td>` + candidates.map(c => {
+  rows += `<tr><td class="sticky-col">Рекомендація</td>` + candidates.map(c => {
     if (!c.verdict) return '<td class="val-cell empty">—</td>';
     const cls = c.verdict === 'Перформер' ? 'green' : 'red';
     const label = c.verdict === 'Перформер' ? 'Продуктивний' : (c.verdict === 'Делатель' ? 'Виконавець' : c.verdict);

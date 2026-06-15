@@ -19,6 +19,10 @@
 .big-verdict.perf { background: var(--c-green); color: var(--c-green-ink); }
 .big-verdict.del  { background: var(--c-red); color: var(--c-red-ink); }
 .big-verdict.none { background: #f1f5f9; color: var(--c-muted); }
+.big-verdict.green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #166534; }
+.big-verdict.amber { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #78350f; }
+.big-verdict.red   { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; }
+.big-verdict.gray  { background: #f1f5f9; color: var(--c-muted); }
 
 .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
 .kpi-card { background: white; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--c-line); }
@@ -142,6 +146,7 @@
 <script src="/assets/js/env.js"></script>
 <script src="/assets/js/supabase.js"></script>
 <script src="/assets/js/auth.js"></script>
+<script src="/assets/js/recommendation.js"></script>
 <script>
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
 
@@ -395,6 +400,7 @@ function render(c) {
   document.getElementById('content').style.display = 'block';
 
   const v = computeLocalVerdict(c);
+  const rec = computeRecommendation(c);
   const vcls = v.verdict === 'Перформер' ? 'perf' : (v.verdict === 'Делатель' ? 'del' : 'none');
   const statusCls = c.test_status === 'completed' ? 'completed' : 'pending';
   const statusTxt = c.test_status === 'completed' ? '✓ Тест завершено' : '⏳ Очікує на проходження';
@@ -413,8 +419,8 @@ function render(c) {
   const completedTests = visibleTests.filter(t => t.done);
   const completedNames = completedTests.map(t => t.name).join(', ');
   const verdictBasis = completedTests.filter(t => t.id === 'productivity').length > 0
-    ? `Вердикт сформовано на основі: <strong>${completedNames || 'тесту продуктивності'}</strong>.`
-    : `Вердикт ще не сформовано — потрібен тест на продуктивність.`;
+    ? `Рекомендація сформована на основі: <strong>${completedNames || 'тесту продуктивності'}</strong>.`
+    : `Рекомендація уточниться після проходження тесту на продуктивність.`;
   const partial = completedTests.length < visibleTests.length;
 
   // Hero
@@ -426,10 +432,10 @@ function render(c) {
         <span class="cand-status ${statusCls}">${statusTxt}</span>${c.source === 'resume_ai' ? '<span class="ai-source-badge">🤖 Аналіз з резюме</span>' : ''}
         ${c.test_completed_at ? `<span style="color:var(--c-muted); font-size:12px; margin-left:10px">${new Date(c.test_completed_at).toLocaleString('uk-UA')}</span>` : ''}
       </div>
-      <div class="big-verdict ${vcls}">
-        <div class="lbl">Вердикт</div>
-        <div class="val">${esc(v.label)}</div>
-        <div class="conf">впевненість: ${esc(v.confidence)}</div>
+      <div class="big-verdict ${rec.cls}">
+        <div class="lbl">Рекомендація</div>
+        <div class="val">${rec.icon} ${esc(rec.shortLabel)}</div>
+        <div class="conf">впевненість: ${esc(rec.confidence)} · ${rec.done}/${rec.total} тестів</div>
       </div>
     </div>
 
@@ -516,7 +522,7 @@ function render(c) {
     // Verdict reasoning
     if (v.reasons && v.reasons.length) {
       html += `<div class="section">
-        <h2>Обґрунтування вердикту по продуктивності</h2>
+        <h2>Обґрунтування рекомендації</h2>
         <div class="reasons-list"><ul>${v.reasons.map(r => '<li>' + esc(r) + '</li>').join('')}</ul></div>
         <p style="color:var(--c-muted); font-size:13px; margin-top:14px">Базовий локальний аналіз. У наступному релізі — поглиблений AI-розбір через OpenAI з цитатами з відповідей.</p>
       </div>`;

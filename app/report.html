@@ -390,7 +390,7 @@ async function render(c) {
         <div class="icon">${hire.cls==='green'?'✓':(hire.cls==='red'?'✗':'⚠')}</div>
         <div class="text">
           <div class="title">${esc(hire.rec)}</div>
-          <div class="desc">Вердикт продуктивності: <strong>${v.verdict === 'Перформер' ? 'Продуктивний та ефективний' : 'Виконавець'}</strong> (впевненість: ${esc(v.confidence)})</div>
+          <div class="desc">Рекомендація: <strong>${v.verdict === 'Перформер' ? 'Продуктивний та ефективний' : 'Виконавець'}</strong> (впевненість: ${esc(v.confidence)})</div>
           ${hire.strengths.length ? '<div class="tag-row"><strong>Сильні сторони:</strong> ' + hire.strengths.map(s=>'<span class="r-tag green">+ '+esc(s)+'</span>').join('') + '</div>' : ''}
           ${hire.risks.length ? '<div class="tag-row"><strong>Ризики:</strong> ' + hire.risks.map(r=>'<span class="r-tag red">! '+esc(r)+'</span>').join('') + '</div>' : ''}
         </div>
