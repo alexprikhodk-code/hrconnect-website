@@ -16,19 +16,19 @@
 .step-card h2 { margin: 0 0 16px; font-size: 17px; display: flex; align-items: center; gap: 10px; }
 .step-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: var(--c-brand); color: white; font-size: 13px; font-weight: 700; }
 
-.drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 36px 24px; text-align: center; cursor: pointer; transition: all .2s; background: #f8fbfd; }
-.drop-zone:hover, .drop-zone.over { border-color: var(--c-brand); background: #eff6fb; transform: translateY(-1px); }
-.drop-zone .ic { font-size: 42px; line-height: 1; margin-bottom: 10px; }
-.drop-zone .ttl { font-size: 15px; font-weight: 700; color: var(--c-brand); }
-.drop-zone .sub { font-size: 12.5px; color: var(--c-muted); margin-top: 4px; }
-.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; opacity: 0 !important; pointer-events: none !important; }
-#fileInput { display: none !important; }
-input[type=file]#fileInput { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; position: absolute !important; left: -99999px !important; top: -99999px !important; }
 
-.tab-row { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--c-line); }
-.tab-btn { background: none; border: none; outline: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--c-muted); border-bottom: 2px solid transparent; transition: all .15s; }
-.tab-btn:focus { outline: none; }
-.tab-btn.active { color: var(--c-brand); border-bottom-color: var(--c-brand); }
+
+
+
+
+
+
+input[type=file]
+
+
+
+
+
 
 .preview-text { background: #f1f5f9; border-radius: 8px; padding: 14px 16px; font-size: 12px; line-height: 1.5; max-height: 220px; overflow-y: auto; white-space: pre-wrap; color: #475569; margin-top: 10px; font-family: ui-monospace, SF Mono, monospace; }
 
@@ -59,6 +59,16 @@ input[type=file]#fileInput { display: none !important; visibility: hidden !impor
 
 textarea.resume-paste { width: 100%; min-height: 240px; border: 1.5px solid var(--c-line); border-radius: 10px; padding: 14px 16px; font-size: 13px; font-family: inherit; resize: vertical; }
 textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
+
+.upload-box { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 36px 20px; background: linear-gradient(135deg, #f8fbfd 0%, #eff6fb 100%); border: 2.5px dashed #94a3b8; border-radius: 14px; cursor: pointer; transition: all .2s; text-align: center; }
+.upload-box:hover, .upload-box.over { border-color: var(--c-brand); background: linear-gradient(135deg, #eff6fb 0%, #dbeafe 100%); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(31,78,120,.12); }
+.upload-plus { width: 64px; height: 64px; border-radius: 50%; background: var(--c-brand); color: white; font-size: 38px; font-weight: 300; line-height: 1; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; box-shadow: 0 4px 14px rgba(31,78,120,.25); transition: all .2s; }
+.upload-box:hover .upload-plus { transform: scale(1.05); box-shadow: 0 6px 20px rgba(31,78,120,.35); }
+.upload-ttl { font-size: 16px; font-weight: 700; color: var(--c-brand); margin-bottom: 4px; }
+.upload-sub { font-size: 12.5px; color: var(--c-muted); }
+.link-toggle { background: none; border: none; cursor: pointer; color: var(--c-brand); font-size: 13px; font-weight: 600; padding: 0; text-decoration: underline dotted; text-underline-offset: 3px; }
+.link-toggle:hover { color: var(--c-brand-2); }
+
 </style>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -96,21 +106,18 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
         <div class="step-card">
           <h2><span class="step-num">1</span> Завантажте резюме</h2>
 
-          <div class="tab-row">
-            <button type="button" class="tab-btn active" data-tab="file" onclick="switchTab('file')">Файл (PDF / DOCX)</button>
-            <button type="button" class="tab-btn" data-tab="paste" onclick="switchTab('paste')">Вставити текст</button>
+          <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" style="display:none">
+          <div class="upload-box" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-plus">+</div>
+            <div class="upload-ttl">Завантажити резюме</div>
+            <div class="upload-sub">Натисніть або перетягніть файл сюди · PDF · DOCX · TXT</div>
           </div>
 
-          <div id="tab-file">
-            <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" class="visually-hidden">
-            <label for="fileInput" class="drop-zone" id="dropZone">
-              <div class="ttl">Перетягніть резюме сюди або клікніть для вибору</div>
-              <div class="sub">PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.</div>
-            </label>
-          </div>
-
-          <div id="tab-paste" style="display:none">
-            <textarea class="resume-paste" id="pastedText" placeholder="Скопіюйте текст резюме сюди (з Google Doc, LinkedIn, Word тощо)..."></textarea>
+          <div style="margin-top:18px">
+            <button type="button" class="link-toggle" onclick="togglePaste()" id="togglePasteBtn">▾ Або вставити текст з Google Doc</button>
+            <div id="pasteWrap" style="display:none; margin-top:10px">
+              <textarea class="resume-paste" id="pastedText" placeholder="Вставте текст резюме сюди..."></textarea>
+            </div>
           </div>
 
           <div id="textPreviewWrap" style="display:none; margin-top:14px">
@@ -131,7 +138,7 @@ textarea.resume-paste:focus { outline: none; border-color: var(--c-brand); }
         <div class="step-card">
           <h2><span class="step-num">3</span> Запустити аналіз</h2>
           <div class="analyze-row">
-            <div class="info" id="costInfo">Аналіз триває ~30-60 секунд. Один аналіз ≈ $0.05.</div>
+            <div class="info" id="costInfo">Аналіз триває ~30-60 секунд. </div>
             <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
               🤖 Запустити AI-аналіз
             </button>
@@ -170,17 +177,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
 
 let extractedText = '';
-
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.getElementById('tab-file').style.display = tab === 'file' ? 'block' : 'none';
-  document.getElementById('tab-paste').style.display = tab === 'paste' ? 'block' : 'none';
-  if (tab === 'paste') {
-    document.getElementById('analyzeBtn').disabled = (document.getElementById('pastedText').value.trim().length < 100);
-  } else {
-    document.getElementById('analyzeBtn').disabled = (extractedText.trim().length < 100);
-  }
-}
 
 document.getElementById('pastedText').addEventListener('input', e => {
   extractedText = e.target.value;
@@ -221,10 +217,12 @@ async function handleFile(file) {
     extractedText = text;
     showPreview(text);
     document.getElementById('analyzeBtn').disabled = (text.trim().length < 100);
-    document.querySelector('.drop-zone .ttl').textContent = '✓ Файл: ' + file.name;
-    document.querySelector('.drop-zone .sub').textContent = 'Витягнуто ' + text.length + ' символів. Можна замінити файл.';
+    const ttlEl = document.querySelector('.upload-ttl');
+    const subEl = document.querySelector('.upload-sub');
+    if (ttlEl) ttlEl.textContent = 'Файл: ' + file.name;
+    if (subEl) subEl.textContent = 'Витягнуто ' + text.length + ' символів. Можна замінити файл.';
   } catch (e) {
-    err.innerHTML = '<div class="err-box">⚠ Помилка читання файлу: ' + escapeHtml(e.message) + '</div>';
+    err.innerHTML = '<div class="err-box">Помилка читання файлу: ' + escapeHtml(e.message) + '</div>';
   }
 }
 
@@ -236,6 +234,19 @@ function showPreview(text) {
     pre.textContent = text.slice(0, 3000) + (text.length > 3000 ? '\n[…ще ' + (text.length - 3000) + ' символів…]' : '');
   } else {
     wrap.style.display = 'none';
+  }
+}
+
+
+function togglePaste() {
+  const w = document.getElementById('pasteWrap');
+  const btn = document.getElementById('togglePasteBtn');
+  if (w.style.display === 'none') {
+    w.style.display = 'block';
+    btn.innerHTML = '▴ Сховати блок вставки тексту';
+  } else {
+    w.style.display = 'none';
+    btn.innerHTML = '▾ Або вставити текст з Google Doc';
   }
 }
 
@@ -368,16 +379,14 @@ function resetAll() {
   document.getElementById('fileInput').value = '';
   document.getElementById('pastedText').value = '';
   document.getElementById('positionContext').value = '';
-  document.querySelector('.drop-zone .ttl').textContent = 'Перетягніть резюме сюди або клікніть для вибору';
-  document.querySelector('.drop-zone .sub').textContent = 'PDF · DOCX · TXT, до 10 МБ. Текст витягнеться автоматично.';
+  const ttlEl = document.querySelector('.upload-ttl');
+  const subEl = document.querySelector('.upload-sub');
+  if (ttlEl) ttlEl.textContent = 'Завантажити резюме';
+  if (subEl) subEl.textContent = 'Натисніть або перетягніть файл сюди · PDF · DOCX · TXT';
   document.getElementById('textPreviewWrap').style.display = 'none';
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('resultCard').classList.remove('show');
   document.getElementById('errBox').innerHTML = '';
-}
-
-function escapeHtml(s) {
-  return (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 (async () => { await requireAuth(); })();

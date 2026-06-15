@@ -8,7 +8,7 @@
 <style>
 .dash-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .dash-toolbar .info { color: var(--c-muted); font-size: 14px; flex: 1; }
-.dash-toolbar input { padding: 8px 12px; border: 1px solid var(--c-line); border-radius: 8px; font-size: 14px; min-width: 220px; }
+.dash-toolbar input { padding: 8px 12px; border: 1px solid var(--c-line); border-radius: 8px; font-size: 14px; min-width: 320px; }
 .btn-compare { background: var(--c-brand); color: white; padding: 9px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 14px; opacity: 0.4; pointer-events: none; transition: all .2s; }
 .btn-compare.active { opacity: 1; pointer-events: auto; }
 .btn-compare.active:hover { background: #173d5e; }
@@ -78,7 +78,7 @@
       <p class="muted">Усі кандидати + результати тестів. Оберіть 2-5 щоб порівняти side-by-side.</p>
 
       <div class="dash-toolbar">
-        <input type="text" id="search" placeholder="🔍 Пошук за іменем або посадою…">
+        <input type="text" id="search" placeholder="🔍 Пошук за іменем або посадою">
         <div class="info" id="selectionInfo">Виділено: 0 з 5</div>
         <button class="btn-compare" id="btnCompare" onclick="openCompare()">⚖️ Порівняти (0)</button>
       </div>
