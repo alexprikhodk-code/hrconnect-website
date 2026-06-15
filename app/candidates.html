@@ -92,6 +92,46 @@
 <script>
 document.getElementById('sideLogo').innerHTML = brandLogoSvg(34) + '<span>AI-HRconnect</span>';
 
+// === Test picker ===
+const PICKER_TESTS = [
+  { id: 'productivity', ic: '📋', name: 'Продуктивність' },
+  { id: 'enneagram',    ic: '🌀', name: 'Еннеаграма' },
+  { id: 'disc',         ic: '📊', name: 'DISC' },
+  { id: 'bigfive',      ic: '🌌', name: 'Big Five' },
+  { id: 'iq',           ic: '🧠', name: 'IQ' },
+  { id: 'reproduction', ic: '👁️', name: 'Відтворення' }
+];
+const pickerState = { productivity: true, enneagram: true, disc: true, bigfive: true, iq: true, reproduction: true };
+
+function renderPicker() {
+  const wrap = document.getElementById('testsPicker');
+  if (!wrap) return;
+  wrap.innerHTML = PICKER_TESTS.map((t, i) => {
+    const on = pickerState[t.id] !== false;
+    return `<div data-id="${t.id}" class="pick-row" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid ${on ? '#1f4e78' : '#e4e8ee'}; background:${on ? '#eff6fb' : 'white'}; border-radius:8px; cursor:pointer; font-size:14px; user-select:none; transition:all .15s">
+      <span style="color:${on ? '#1f4e78' : '#94a3b8'}; font-weight:700; min-width:24px">${i + 1})</span>
+      <span style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:4px; border:2px solid ${on ? '#16a34a' : '#cbd5e1'}; background:${on ? '#16a34a' : 'white'}; color:white; font-size:13px; font-weight:900; flex-shrink:0">${on ? '✓' : ''}</span>
+      <span style="font-size:18px; line-height:1">${t.ic}</span>
+      <span style="color:#0f172a">${t.name}</span>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.pick-row').forEach(row => {
+    row.onclick = () => {
+      const id = row.dataset.id;
+      pickerState[id] = !(pickerState[id] !== false);
+      renderPicker();
+    };
+  });
+}
+
+function getAssignedTests() {
+  return PICKER_TESTS.filter(t => pickerState[t.id] !== false).map(t => t.id);
+}
+
+renderPicker();
+document.getElementById('pickAllBtn').onclick = () => { PICKER_TESTS.forEach(t => pickerState[t.id] = true); renderPicker(); };
+document.getElementById('pickNoneBtn').onclick = () => { PICKER_TESTS.forEach(t => pickerState[t.id] = false); renderPicker(); };
+
 function openInvite() {
   document.getElementById('modal').style.display = 'flex';
   document.getElementById('inviteForm').style.display = 'block';
@@ -144,33 +184,34 @@ async function refresh() {
     '</tr></thead><tbody>' +
     cands.map(c => {
       const url = c.test_link_token ? (window.location.origin + '/test/?t=' + c.test_link_token) : '';
-      // Compute test completion progress
-      const tests = [
-        c.test_status === 'completed' || !!c.raw_answers,  // main
-        c.enneagram_type != null,                           // enneagram
-        !!c.disc_dominant,                                  // disc
-        !!c.bigfive_dominant,                               // bigfive
-        c.iq != null,                                       // iq
-        c.reproduction != null                              // reproduction
-      ];
-      const completed = tests.filter(Boolean).length;
-      const total = tests.length;
-      const pct = Math.round(completed / total * 100);
-      const statusColor = completed === total ? 'var(--c-green)' : (completed === 0 ? 'var(--c-muted)' : '#b45309');
+      const TEST_ICONS = { productivity:'📋', enneagram:'🌀', disc:'📊', bigfive:'🌌', iq:'🧠', reproduction:'👁️' };
+      const TEST_DONE = {
+        productivity: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0),
+        enneagram:    c.enneagram_type != null,
+        disc:         !!c.disc_dominant,
+        bigfive:      !!c.bigfive_dominant,
+        iq:           c.iq != null,
+        reproduction: c.reproduction != null
+      };
+      const assigned = (c.assigned_tests && c.assigned_tests.length) ? c.assigned_tests : Object.keys(TEST_ICONS);
+      const completed = assigned.filter(t => TEST_DONE[t]).length;
+      const total = assigned.length;
+      const pct = total > 0 ? Math.round(completed / total * 100) : 0;
+      const statusColor = completed === total ? '#166534' : (completed === 0 ? 'var(--c-muted)' : '#b45309');
       const statusBg = completed === total ? '#dcfce7' : (completed === 0 ? '#f1f5f9' : '#fef3c7');
-      const progressHTML = `<div style="display:inline-flex; align-items:center; gap:8px"><span style="background:${statusBg}; color:${statusColor}; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600">${completed}/${total} · ${pct}%</span></div>`;
+      const iconsHTML = assigned.map(t => {
+        const done = TEST_DONE[t];
+        const bg = done ? 'background:linear-gradient(135deg, #86efac 0%, #22c55e 100%); box-shadow:0 1px 3px rgba(34,197,94,.3); color:white' : 'background:#f1f5f9; opacity:0.5';
+        return '<span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:6px; font-size:12px; ' + bg + '">' + TEST_ICONS[t] + '</span>';
+      }).join(' ');
+      const progressHTML = '<div><span style="background:' + statusBg + '; color:' + statusColor + '; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:600">' + completed + '/' + total + ' · ' + pct + '%</span><div style="margin-top:5px; display:flex; gap:4px">' + iconsHTML + '</div></div>';
       return '<tr style="border-top:1px solid var(--c-line)">' +
         '<td style="padding:12px 16px; font-weight:600"><a href="/app/candidate.html?id=' + c.id + '" style="color:var(--c-brand)">' + esc(c.name) + '</a></td>' +
         '<td style="padding:12px 16px; color:var(--c-muted)">' + esc(c.position || '—') + '</td>' +
         '<td style="padding:12px 16px">' + progressHTML + '</td>' +
-        '<td style="padding:12px 16px"><div style="display:flex; flex-direction:column; gap:4px">' + 
-  (url ? '<div style="margin-bottom:6px"><a href="' + url + '" target="_blank" style="font-size:12px; font-weight:600">📋 Тест на продуктивність</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">розуміння продукту посади, результати, досягнення</div></div>' : '') +
-  (ennUrl ? '<div style="margin-bottom:6px"><a href="' + ennUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌀 Еннеаграма</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">9 типів особистості — що внутрішньо рухає людиною</div></div>' : '') +
-  (discUrl ? '<div style="margin-bottom:6px"><a href="' + discUrl + '" target="_blank" style="font-size:12px; font-weight:600">📊 DISC</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">стиль робочої поведінки (Dominance/Influence/Steadiness/Conscientiousness)</div></div>' : '') +
-  (bfUrl ? '<div style="margin-bottom:6px"><a href="' + bfUrl + '" target="_blank" style="font-size:12px; font-weight:600">🌌 Big Five</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">5 наукових вимірів OCEAN — найбільш валідована модель</div></div>' : '') +
-  (iqUrl ? '<div style="margin-bottom:6px"><a href="' + iqUrl + '" target="_blank" style="font-size:12px; font-weight:600">🧠 IQ</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">когнітивні здібності — логіка, лічба, аналогії (15 хв з таймером)</div></div>' : '') +
-  (repUrl ? '<div style="margin-bottom:6px"><a href="' + repUrl + '" target="_blank" style="font-size:12px; font-weight:600">👁️ Відтворення</a><div style="font-size:10.5px; color:var(--c-muted); line-height:1.35; margin-left:18px">точність сприйняття інструкцій та задач (5 хв)</div></div>' : '') +
-'</div></td>' +
+        '<td style="padding:12px 16px">' +
+          (url ? '<div><a href="' + url + '" target="_blank" style="font-size:13px; font-weight:600; color:var(--c-brand)">🔗 Посилання на тестування</a><div style="font-size:11px; color:var(--c-muted); margin-top:3px">Кандидат побачить меню з усіма призначеними тестами</div><div style="margin-top:6px"><button onclick="copyLink(this, \'' + url + '\')" style="background:none; border:1px solid var(--c-line); border-radius:6px; padding:3px 10px; cursor:pointer; font-size:11px; color:var(--c-muted)">📋 Скопіювати</button></div></div>' : '<span style="color:var(--c-muted); font-size:12px">—</span>') +
+        '</td>' +
         '<td style="padding:12px 16px"><button class="btn btn-ghost" style="padding:5px 12px; font-size:12px" onclick="deleteCand(\'' + c.id + '\')">Видалити</button></td>' +
       '</tr>';
     }).join('') + '</tbody></table></div>';
@@ -182,10 +223,16 @@ async function deleteCand(id) {
   refresh();
 }
 
+function copyLink(btn, url) {
+  navigator.clipboard.writeText(url);
+  const orig = btn.textContent;
+  btn.textContent = '✓ Скопійовано';
+  setTimeout(() => { btn.textContent = orig; }, 2000);
+}
+
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 (async () => { await requireAuth(); refresh(); })();
 </script>
 <script src="/assets/js/ux.js"></script>
 </body></html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
