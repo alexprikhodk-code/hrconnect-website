@@ -135,6 +135,28 @@ body { background: #f0f2f5; }
 .r-prepared-for .l { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
 .r-prepared-for .v { font-weight: 700; font-size: 16px; margin-top: 4px; }
 
+
+/* ====== Executive summary ====== */
+.r-summary { margin-bottom: 28px; padding: 22px 24px; background: #f8fafc; border-radius: 14px; border: 1px solid #e4e8ee; }
+.r-summary h3 { margin: 0 0 14px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: #1f4e78; font-weight: 700; }
+.r-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.r-tests-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
+.r-test-pill { padding: 10px 6px; border-radius: 10px; text-align: center; font-size: 10px; font-weight: 700; }
+.r-test-pill.done { background: #dcfce7; color: #166534; }
+.r-test-pill.missing { background: #f1f5f9; color: #94a3b8; }
+.r-test-pill .ico { display: block; font-size: 18px; margin-bottom: 4px; }
+.r-quick-results { background: white; border-radius: 10px; padding: 14px 16px; }
+.r-quick-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+.r-quick-row:last-child { border-bottom: none; }
+.r-quick-row .l { color: #64748b; }
+.r-quick-row .v { font-weight: 700; color: #0f172a; }
+.r-verdict-mini { padding: 14px 16px; border-radius: 10px; display: flex; align-items: center; gap: 10px; }
+.r-verdict-mini.perf { background: #dcfce7; color: #166534; }
+.r-verdict-mini.del { background: #fee2e2; color: #b91c1c; }
+.r-verdict-mini .ic { font-size: 28px; }
+.r-verdict-mini .label { font-weight: 800; font-size: 14px; }
+.r-verdict-mini .sub { font-size: 11px; opacity: 0.8; }
+
 /* ====== Branded footer (every page) ====== */
 .r-page-footer { margin-top: 40px; padding-top: 16px; border-top: 2px solid #1f4e78; display: flex; justify-content: space-between; align-items: center; gap: 14px; font-size: 10px; color: #64748b; }
 .r-page-footer .left { display: flex; align-items: center; gap: 8px; }
@@ -187,6 +209,8 @@ body { background: #f0f2f5; }
 <script src="/test/enneagram/questions.js"></script>
 <script src="/test/disc/questions.js"></script>
 <script src="/test/bigfive/questions.js"></script>
+<script src="/test/iq/questions.js"></script>
+<script src="/test/reproduction/questions.js"></script>
 <script>
 const POINT_ORDER = ['A','B','C','D','E','F','G','H','I','J'];
 const TRAITS = {
@@ -280,6 +304,7 @@ async function load() {
 async function render(c) {
   const v = computeVerdict(c);
   const hire = computeHireRec(c, v);
+  const hasMain = c.points && Object.keys(c.points).length > 0;
   const date = new Date().toLocaleDateString('uk-UA');
   const completedDate = c.test_completed_at ? new Date(c.test_completed_at).toLocaleDateString('uk-UA') : '—';
 
@@ -324,12 +349,39 @@ async function render(c) {
       <div class="r-cover-tag">Звіт з аналізу кандидата</div>
       <h1>${esc(c.name)}</h1>
       <p class="r-cover-sub">${esc(c.position || 'Посада не вказана')}</p>
-      <div class="r-cover-meta">
-        <div class="r-cover-meta-cell"><div class="l">Email</div><div class="v">${esc(c.email || '—')}</div></div>
+      <div class="r-cover-meta" style="grid-template-columns: 1fr 1fr;">
         <div class="r-cover-meta-cell"><div class="l">Телефон</div><div class="v">${esc(c.phone || '—')}</div></div>
-        <div class="r-cover-meta-cell"><div class="l">Вік / Стать</div><div class="v">${c.age || '—'} / ${esc(c.sex || '—')}</div></div>
+        <div class="r-cover-meta-cell"><div class="l">Email</div><div class="v">${esc(c.email || '—')}</div></div>
       </div>
       ${preparedForHTML}
+    </div>
+
+    <div class="r-summary">
+      <h3>🎯 Виконавчий огляд</h3>
+      <div class="r-summary-grid">
+        <div class="r-verdict-mini ${v.verdict === 'Перформер' ? 'perf' : 'del'}">
+          <div class="ic">${v.verdict === 'Перформер' ? '✓' : '⚠'}</div>
+          <div>
+            <div class="label">${v.verdict === 'Перформер' ? 'Продуктивний та ефективний' : 'Виконавець'}</div>
+            <div class="sub">впевненість: ${esc(v.confidence)}</div>
+          </div>
+        </div>
+        <div class="r-quick-results">
+          ${c.iq != null ? `<div class="r-quick-row"><span class="l">🧠 IQ</span><span class="v">${c.iq} · ${esc(c.iq_band || '')}</span></div>` : ''}
+          ${c.reproduction != null ? `<div class="r-quick-row"><span class="l">👁️ Відтворення</span><span class="v">${c.reproduction}% · ${esc(c.reproduction_band || '')}</span></div>` : ''}
+          ${c.enneagram_type ? `<div class="r-quick-row"><span class="l">🌀 Еннеаграма</span><span class="v">Тип ${c.enneagram_type} · ${esc(ENNEAGRAM_TYPES[c.enneagram_type]?.name || '')}</span></div>` : ''}
+          ${c.disc_dominant ? `<div class="r-quick-row"><span class="l">📊 DISC</span><span class="v">${esc(c.disc_profile || c.disc_dominant)} · ${esc(DISC_STYLES[c.disc_dominant]?.ua || '')}</span></div>` : ''}
+          ${c.bigfive_dominant ? `<div class="r-quick-row"><span class="l">🌌 Big Five</span><span class="v">${c.bigfive_dominant} · ${esc(BIGFIVE_DIMS[c.bigfive_dominant]?.ua || '')}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="r-tests-strip">
+        <div class="r-test-pill ${hasMain ? 'done' : 'missing'}"><span class="ico">📋</span>Продуктивність</div>
+        <div class="r-test-pill ${c.enneagram_type ? 'done' : 'missing'}"><span class="ico">🌀</span>Еннеаграма</div>
+        <div class="r-test-pill ${c.disc_dominant ? 'done' : 'missing'}"><span class="ico">📊</span>DISC</div>
+        <div class="r-test-pill ${c.bigfive_dominant ? 'done' : 'missing'}"><span class="ico">🌌</span>Big Five</div>
+        <div class="r-test-pill ${c.iq != null ? 'done' : 'missing'}"><span class="ico">🧠</span>IQ</div>
+        <div class="r-test-pill ${c.reproduction != null ? 'done' : 'missing'}"><span class="ico">👁️</span>Відтворення</div>
+      </div>
     </div>
 
     <div class="r-section">
@@ -345,8 +397,9 @@ async function render(c) {
       </div>
     </div>`;
 
+  
+
   // Main test — traits
-  const hasMain = c.points && Object.keys(c.points).length > 0;
   if (hasMain) {
     const traits = POINT_ORDER.map(code => {
       const p = c.points[code];
@@ -396,12 +449,44 @@ async function render(c) {
     html += `</div>`;
   }
 
+  // IQ section
+  if (c.iq != null) {
+    html += `<div class="r-section">
+      <h2 data-num="4">🧠 IQ — когнітивні здібності</h2>
+      <div class="r-test-summary">
+        <div class="icon-circle" style="background:#eab308; border-radius:10px">${c.iq}</div>
+        <div>
+          <div class="name">${esc(c.iq_band || 'Не виміряно')}</div>
+          <div class="ua">${c.iq_correct != null ? c.iq_correct + ' правильних з 15' : 'Когнітивний рівень кандидата'}</div>
+        </div>
+        <div class="pct">${c.iq}</div>
+      </div>`;
+    if (c.iq_summary) html += `<div style="margin-top:12px; padding:10px 14px; background:#f9fbfd; border-left:3px solid #2e7d8f; border-radius:6px; font-size:11.5px; line-height:1.5">${esc(c.iq_summary)}</div>`;
+    html += `</div>`;
+  }
+
+  // Reproduction section
+  if (c.reproduction != null) {
+    html += `<div class="r-section">
+      <h2 data-num="5">👁️ Здатність відтворення</h2>
+      <div class="r-test-summary">
+        <div class="icon-circle" style="background:#10b981; border-radius:10px">${c.reproduction}%</div>
+        <div>
+          <div class="name">${esc(c.reproduction_band || 'Не виміряно')}</div>
+          <div class="ua">Точність сприйняття та повторення інструкцій</div>
+        </div>
+        <div class="pct">${c.reproduction}%</div>
+      </div>`;
+    if (c.reproduction_summary) html += `<div style="margin-top:12px; padding:10px 14px; background:#f9fbfd; border-left:3px solid #2e7d8f; border-radius:6px; font-size:11.5px; line-height:1.5">${esc(c.reproduction_summary)}</div>`;
+    html += `</div>`;
+  }
+
   // Enneagram
   if (c.enneagram_type) {
     const t = ENNEAGRAM_TYPES[c.enneagram_type];
     const pcts = c.enneagram_percentages || {};
     html += `<div class="r-section">
-      <h2 data-num="4">🌀 Еннеаграма особистості</h2>
+      <h2 data-num="6">🌀 Еннеаграма особистості</h2>
       <div class="r-test-summary">
         <div class="icon-circle" style="background:${t.color}">${c.enneagram_type}</div>
         <div>
@@ -427,7 +512,7 @@ async function render(c) {
     const st = DISC_STYLES[c.disc_dominant];
     const pcts = c.disc_percentages || {};
     html += `<div class="r-section">
-      <h2 data-num="5">📊 DISC · стиль робочої поведінки</h2>
+      <h2 data-num="7">📊 DISC · стиль робочої поведінки</h2>
       <div class="r-test-summary">
         <div class="icon-circle" style="background:${st.color}; border-radius:10px">${c.disc_profile || c.disc_dominant}</div>
         <div>
@@ -454,7 +539,7 @@ async function render(c) {
     const dim = BIGFIVE_DIMS[c.bigfive_dominant];
     const pcts = c.bigfive_percentages || {};
     html += `<div class="r-section">
-      <h2 data-num="6">🌌 Big Five · 5 наукових вимірів</h2>
+      <h2 data-num="8">🌌 Big Five · 5 наукових вимірів</h2>
       <div class="r-test-summary">
         <div class="icon-circle" style="background:${dim.color}; border-radius:10px">${c.bigfive_dominant}</div>
         <div>

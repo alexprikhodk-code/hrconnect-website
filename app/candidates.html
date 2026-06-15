@@ -60,6 +60,10 @@
         <input type="email" class="form-input" id="invEmail">
       </div>
       <div class="form-group">
+        <label class="form-label">Телефон (необовʼязково)</label>
+        <input type="tel" class="form-input" id="invPhone" placeholder="+380...">
+      </div>
+      <div class="form-group">
         <label class="form-label">Посада, на яку розглядаєте</label>
         <input type="text" class="form-input" id="invPosition">
       </div>
@@ -95,6 +99,7 @@ document.getElementById('inviteForm').onsubmit = async (e) => {
     user_id: user.id,
     name: document.getElementById('invName').value.trim(),
     email: document.getElementById('invEmail').value.trim() || null,
+    phone: document.getElementById('invPhone').value.trim() || null,
     position: document.getElementById('invPosition').value.trim() || null,
     test_link_token: token,
     test_status: 'pending'
