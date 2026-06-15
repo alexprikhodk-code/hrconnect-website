@@ -92,3 +92,55 @@ p { color: #1e293b; }
 .gap-2 { gap: 8px; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+
+/* ====== UX: Cabinet hover + scroll-reveal + smart topbar ====== */
+
+/* Hover lift on key blocks */
+.card, .summary-card, .point-block, .trait-card, .kpi-card,
+.r-section, .dim-row, .style-row, .type-row, .test-card,
+.compare-table tbody tr {
+  transition: transform .22s ease, box-shadow .22s ease, background-color .15s ease;
+}
+.card:hover, .summary-card:hover, .point-block:hover,
+.kpi-card:hover, .r-section:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(15,30,50,0.10);
+}
+.point-block:hover .hd, .trait-card:hover { background-color: #f8fbfd; }
+.candidates-row:hover, .dash-table tbody tr:hover { background: #f4f9fc !important; }
+
+/* Sidebar nav-item smooth hover */
+.app-side .nav-item { transition: background-color .15s, padding-left .15s, color .15s; }
+.app-side .nav-item:hover { padding-left: 16px; }
+
+/* Buttons subtle scale */
+.btn { transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease; }
+.btn:active { transform: scale(0.97); }
+
+/* ====== Scroll reveal ====== */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .55s ease, transform .55s ease; will-change: opacity, transform; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d-1 { transition-delay: .06s; }
+.reveal-d-2 { transition-delay: .12s; }
+.reveal-d-3 { transition-delay: .18s; }
+.reveal-d-4 { transition-delay: .24s; }
+.reveal-d-5 { transition-delay: .30s; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .card:hover, .summary-card:hover, .point-block:hover, .kpi-card:hover, .r-section:hover { transform: none !important; }
+}
+
+/* ====== Smart app-topbar (auto-hide on scroll down) ====== */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  transition: transform .3s ease, box-shadow .25s ease;
+  backdrop-filter: saturate(140%) blur(8px);
+  background: rgba(255,255,255,0.96);
+}
+.app-topbar.topbar-hidden { transform: translateY(-110%); }
+.app-topbar.topbar-floating { box-shadow: 0 4px 20px rgba(15,30,50,0.08); }
+
+/* Hover zone for cursor-reveal */
+.app-topbar-hover-zone { position: sticky; top: 0; height: 12px; z-index: 29; margin-bottom: -12px; }
