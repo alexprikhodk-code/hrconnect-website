@@ -30,18 +30,18 @@
 @media (max-width: 560px) { .pricing-grid { grid-template-columns:1fr; max-width:420px; } }
 
 .cost-section { padding: 90px 0; background: #faf6f0; }
-.cost-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 7px 16px; border-radius: 999px; font-weight: 600; font-size: 13px; letter-spacing: 0.02em; }
+.cost-badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 10px 22px; border-radius: 999px; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
 .cost-section h2 { font-size: 38px; line-height: 1.18; max-width: 760px; margin: 18px auto 14px; }
 .cost-section .sub { font-size: 16px; color: #64748b; max-width: 620px; margin: 0 auto 50px; text-align: center; }
 .cost-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1200px; margin: 0 auto; }
-.cost-card { background: white; border-radius: 18px; padding: 28px 26px; text-align: left; box-shadow: 0 2px 20px rgba(15,30,50,0.06); display: flex; flex-direction: column; min-height: 250px; }
+.cost-card { background: white; border-radius: 18px; padding: 28px 26px; text-align: left; box-shadow: 0 2px 20px rgba(15,30,50,0.06); display: flex; flex-direction: column; min-height: 290px; }
 .cost-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 22px; }
 .cost-icon.c1 { background: #fde68a; }
 .cost-icon.c2 { background: #bbf7d0; }
 .cost-icon.c3 { background: #e0e7ff; }
 .cost-icon.c4 { background: #fecaca; }
-.cost-num { font-size: 44px; font-weight: 800; line-height: 1; margin-bottom: 14px; color: #0f172a; letter-spacing: -0.02em; }
-.cost-unit { color: var(--c-accent); }
+.cost-num { font-size: 40px; font-weight: 800; line-height: 1.1; margin-bottom: 14px; color: #0f172a; letter-spacing: -0.02em; min-height: 90px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.cost-unit { color: var(--c-accent); font-size: 24px; font-weight: 700; }
 .cost-desc { font-size: 14px; color: #475569; line-height: 1.5; margin-top: auto; }
 @media (max-width: 1000px) { .cost-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .cost-grid { grid-template-columns: 1fr; } .cost-section h2 { font-size: 28px; } }
@@ -275,7 +275,10 @@
       </div>
       <div class="cost-card">
         <div class="cost-icon c3">📅</div>
-        <div class="cost-num" style="font-size:32px; line-height:1.15">10-14 <span class="cost-unit" style="font-size:16px">днів</span><br><span style="font-size:18px; color:#1a2332;">2-3 <span class="cost-unit" style="font-size:14px">місяці</span></span></div>
+        <div class="cost-num" style="flex-direction:column; align-items:flex-start; gap:6px">
+          <div>10-14 <span class="cost-unit" style="font-size:20px">днів</span></div>
+          <div style="font-size:26px; color:#475569">2-3 <span class="cost-unit" style="font-size:16px">місяці</span></div>
+        </div>
         <div class="cost-desc">10-14 днів — для лінійних співробітників. 2-3 місяці — для керівників топ-ланки</div>
       </div>
       <div class="cost-card">
