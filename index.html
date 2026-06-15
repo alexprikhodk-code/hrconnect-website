@@ -68,6 +68,84 @@
 .test-modal ul { padding-left: 20px; margin: 8px 0; }
 
 .predictive-badge { display: inline-block; background: #dcfce7; color: #166534; padding: 10px 22px; border-radius: 999px; font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* ====== Interactive hover lift on all blocks ====== */
+.cost-card,
+.card,
+.test-card,
+details.card,
+.pricing-grid > .card {
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.cost-card:hover,
+.card:hover,
+.pricing-grid > .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(15,30,50,0.14);
+}
+.test-card:hover { /* already had hover; add stronger glow */
+  box-shadow: 0 16px 40px rgba(31,78,120,0.18);
+  transform: translateY(-5px);
+}
+details.card { cursor: pointer; }
+details.card:hover { background: #fafbfd; }
+details.card summary { transition: color .2s; }
+details.card:hover summary { color: var(--c-brand); }
+
+/* Image hover — subtle scale */
+.hero-img-grid img,
+.feature-img,
+section img {
+  transition: transform .5s ease, box-shadow .4s ease;
+}
+.hero-img-grid img:hover,
+.feature-img:hover,
+section img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 50px rgba(15,30,50,0.18);
+}
+
+/* ====== Scroll-triggered fade-in ====== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity .7s ease, transform .7s ease;
+  will-change: opacity, transform;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+
+/* Disable animation for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .cost-card:hover, .card:hover, .test-card:hover, .pricing-grid > .card:hover { transform: none !important; }
+}
+
+/* ====== Auto-hide topnav with cursor-zone reveal ====== */
+.topnav {
+  transition: transform .35s ease, box-shadow .25s ease;
+}
+.topnav.nav-hidden {
+  transform: translateY(-100%);
+}
+.topnav.nav-floating {
+  box-shadow: 0 4px 24px rgba(15,30,50,0.10);
+}
+.nav-hover-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  z-index: 49;
+  /* invisible by default — just a hover trigger zone */
+}
 </style>
 <script type="application/ld+json">
 {
@@ -251,7 +329,7 @@
     <p class="muted mt-4" style="font-size:13px">2 безкоштовні тести на місяць · без картки</p>
 
     <div class="hero-img-grid">
-      <img class="big" src="/assets/img/hero-main.jpg" alt="Команда обговорює результати">
+      <img class="big reveal" src="/assets/img/hero-main.jpg" alt="Команда обговорює результати">
       <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80" alt="Колеги дивляться на графіки">
       <img src="/assets/img/hero-side.jpg" alt="Аналітика на ноутбуці">
     </div>
@@ -262,20 +340,20 @@
 <section class="cost-section">
   <div class="container" style="text-align:center">
     <div class="cost-badge">Класичний найм</div>
-    <h2>Чому HR-процес «як завжди» —<br>це дорого</h2>
+    <h2 class="reveal">Чому HR-процес «як завжди» —<br>це дорого</h2>
     <p class="sub">Скільки коштує підбір однієї людини, якщо рахувати чесно</p>
     <div class="cost-grid">
-      <div class="cost-card">
+      <div class="cost-card reveal reveal-delay-1">
         <div class="cost-icon c1">⏱</div>
         <div class="cost-num">3 <span class="cost-unit">год</span></div>
         <div class="cost-desc">щодня витрачає керівник на перегляд резюме та анкет</div>
       </div>
-      <div class="cost-card">
+      <div class="cost-card reveal reveal-delay-2">
         <div class="cost-icon c2">💸</div>
         <div class="cost-num">від 100 <span class="cost-unit">тис ₴</span></div>
         <div class="cost-desc">вартість помилки найму одного співробітника: пошук, простій посади, заміна, навчання, недоотриманий прибуток</div>
       </div>
-      <div class="cost-card">
+      <div class="cost-card reveal reveal-delay-3">
         <div class="cost-icon c3">📅</div>
         <div class="cost-num" style="flex-direction:column; align-items:flex-start; gap:6px">
           <div>10-14 <span class="cost-unit">днів</span></div>
@@ -283,7 +361,7 @@
         </div>
         <div class="cost-desc">10-14 днів — для лінійних співробітників. 2-3 місяці — для керівників топ-ланки</div>
       </div>
-      <div class="cost-card">
+      <div class="cost-card reveal reveal-delay-4">
         <div class="cost-icon c4">🎯</div>
         <div class="cost-num">до 50 <span class="cost-unit">%</span></div>
         <div class="cost-desc">точність рішення «по інтуїції» — фактично рулетка: вгадав або ні</div>
@@ -297,19 +375,19 @@
     <div class="predictive-badge">Найм за предиктивним аналізом кандидатів</div>
     <h2 class="text-center" style="margin-top:18px">Від вакансії до вердикту — три кроки</h2>
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:40px">
-      <div class="card">
+      <div class="card reveal">
         <img class="feature-img" src="https://images.unsplash.com/photo-1556745753-b2904692b3cd?auto=format&fit=crop&w=600&q=80" alt="HR створює запит">
         <div style="font-size:32px; color:var(--c-brand); font-weight:800">①</div>
         <h3>Створюєте кандидата</h3>
         <p class="muted">У кабінеті натискаєте «+ Запросити», отримуєте унікальне посилання — копіюєте кандидату у месенджер.</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <img class="feature-img" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80" alt="Кандидат проходить тест">
         <div style="font-size:32px; color:var(--c-brand); font-weight:800">②</div>
         <h3>Кандидат проходить тест</h3>
         <p class="muted">15 хвилин адаптивної анкети про продуктивність, особистість, IQ і здатність відтворювати інструкції.</p>
       </div>
-      <div class="card">
+      <div class="card reveal">
         <img class="feature-img" src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80" alt="HR отримує аналітику">
         <div style="font-size:32px; color:var(--c-brand); font-weight:800">③</div>
         <h3>AI-вердикт у кабінеті</h3>
@@ -321,40 +399,40 @@
 
 <section id="tests" style="padding:80px 0; background:#f8fafc">
   <div class="container">
-    <h2 class="text-center">Що оцінюємо · 6 методик</h2>
+    <h2 class="text-center reveal">Що оцінюємо · 6 методик</h2>
     <p class="text-center muted" style="max-width:680px; margin:10px auto 40px">Шість тестів, що дають повну картину кандидата ще до співбесіди. Натисніть на картку, щоб дізнатися деталі.</p>
     <div class="tests-grid">
-      <div class="test-card" data-test="productivity">
+      <div class="test-card reveal reveal-delay-2" data-test="productivity">
         <div class="test-icon" style="background:#dbeafe">📋</div>
         <h3>Тест на продуктивність</h3>
         <p class="muted">Чи бачить людина продукт своєї посади та чи має конкретні результати</p>
         <div class="test-meta">⏱ 15-20 хв · 13 питань + 20 так/ні</div>
       </div>
-      <div class="test-card" data-test="enneagram">
+      <div class="test-card reveal reveal-delay-3" data-test="enneagram">
         <div class="test-icon" style="background:#ede9fe">🌀</div>
         <h3>Еннеаграма</h3>
         <p class="muted">9 типів особистості — що внутрішньо рухає кандидатом</p>
         <div class="test-meta">⏱ 10 хв · 45 тверджень</div>
       </div>
-      <div class="test-card" data-test="disc">
+      <div class="test-card reveal reveal-delay-4" data-test="disc">
         <div class="test-icon" style="background:#fee2e2">📊</div>
         <h3>DISC</h3>
         <p class="muted">Стиль робочої поведінки (Dominance / Influence / Steadiness / Conscientiousness)</p>
         <div class="test-meta">⏱ 7-10 хв · 24 твердження</div>
       </div>
-      <div class="test-card" data-test="bigfive">
+      <div class="test-card reveal reveal-delay-1" data-test="bigfive">
         <div class="test-icon" style="background:#ddd6fe">🌌</div>
         <h3>Big Five (OCEAN)</h3>
         <p class="muted">5 наукових вимірів — найбільш валідована академічна модель</p>
         <div class="test-meta">⏱ 8-12 хв · 30 тверджень</div>
       </div>
-      <div class="test-card" data-test="iq">
+      <div class="test-card reveal reveal-delay-2" data-test="iq">
         <div class="test-icon" style="background:#fef3c7">🧠</div>
         <h3>IQ — когнітивні здібності</h3>
         <p class="muted">Логіка, лічба, аналогії, числові послідовності — з таймером</p>
         <div class="test-meta">⏱ 15 хв · 15 завдань · обмеження часу</div>
       </div>
-      <div class="test-card" data-test="reproduction">
+      <div class="test-card reveal reveal-delay-3" data-test="reproduction">
         <div class="test-icon" style="background:#dcfce7">👁️</div>
         <h3>Здатність відтворення</h3>
         <p class="muted">Точність сприйняття та повторення інструкцій — критично для багатьох ролей</p>
@@ -373,9 +451,9 @@
 
 <section id="pricing" style="padding:80px 0">
   <div class="container">
-    <h2 class="text-center">Платіть лише за результат</h2>
+    <h2 class="text-center reveal">Платіть лише за результат</h2>
     <div class="pricing-grid">
-      <div class="card">
+      <div class="card reveal reveal-delay-1">
         <strong style="color:var(--c-muted)">FREE</strong>
         <div style="font-size:38px; font-weight:700; margin:8px 0">0 ₴</div>
         <p class="muted">2 тести на місяць<br>Базовий аналіз</p>
@@ -405,13 +483,13 @@
 
 <section id="faq" style="padding:80px 0; background:#f8fafc">
   <div class="container" style="max-width:780px">
-    <h2 class="text-center">Часті запитання</h2>
+    <h2 class="text-center reveal">Часті запитання</h2>
     <div class="mt-6">
-      <details class="card mt-2"><summary style="cursor:pointer; font-weight:600">Скільки часу займає тест?</summary><p class="muted mt-2">15-20 хвилин адаптивного опитування.</p></details>
-      <details class="card mt-2"><summary style="cursor:pointer; font-weight:600">Чи кандидат бачить мої результати?</summary><p class="muted mt-2">Ні. Результат бачите тільки ви у своєму кабінеті.</p></details>
-      <details class="card mt-2"><summary style="cursor:pointer; font-weight:600">Як оплатити PRO?</summary><p class="muted mt-2">Поки що — IBAN/карта вручну. Напишіть нам, ми активуємо PRO на 30 днів.</p></details>
-      <details class="card mt-2"><summary style="cursor:pointer; font-weight:600">Чи зберігаєте ви персональні дані?</summary><p class="muted mt-2">Так, у захищеній БД. Кожен користувач бачить лише свої дані (Row Level Security на рівні Postgres).</p></details>
-      <details class="card mt-2"><summary style="cursor:pointer; font-weight:600">На якій методології ґрунтується AI-аналіз?</summary><p class="muted mt-2">Внутрішня методологія AI-HRconnect — поєднання класичних HR-практик і AI-моделей для оцінки продуктивності, особистості і здатності виконувати завдання.</p></details>
+      <details class="card mt-2 reveal"><summary style="cursor:pointer; font-weight:600">Скільки часу займає тест?</summary><p class="muted mt-2">15-20 хвилин адаптивного опитування.</p></details>
+      <details class="card mt-2 reveal"><summary style="cursor:pointer; font-weight:600">Чи кандидат бачить мої результати?</summary><p class="muted mt-2">Ні. Результат бачите тільки ви у своєму кабінеті.</p></details>
+      <details class="card mt-2 reveal"><summary style="cursor:pointer; font-weight:600">Як оплатити PRO?</summary><p class="muted mt-2">Поки що — IBAN/карта вручну. Напишіть нам, ми активуємо PRO на 30 днів.</p></details>
+      <details class="card mt-2 reveal"><summary style="cursor:pointer; font-weight:600">Чи зберігаєте ви персональні дані?</summary><p class="muted mt-2">Так, у захищеній БД. Кожен користувач бачить лише свої дані (Row Level Security на рівні Postgres).</p></details>
+      <details class="card mt-2 reveal"><summary style="cursor:pointer; font-weight:600">На якій методології ґрунтується AI-аналіз?</summary><p class="muted mt-2">Внутрішня методологія AI-HRconnect — поєднання класичних HR-практик і AI-моделей для оцінки продуктивності, особистості і здатності виконувати завдання.</p></details>
     </div>
   </div>
 </section>
@@ -648,6 +726,89 @@ document.addEventListener('keydown', (e) => {
     closeQuestionModal();
   }
 });
+</script>
+
+<script>
+// ===== Scroll reveal via IntersectionObserver =====
+(function () {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+// ===== Sticky-hide topnav with cursor-zone reveal =====
+(function () {
+  const nav = document.querySelector('.topnav');
+  if (!nav) return;
+
+  // Add hover zone
+  const zone = document.createElement('div');
+  zone.className = 'nav-hover-zone';
+  document.body.appendChild(zone);
+
+  let lastScrollY = window.scrollY;
+  let isHidden = false;
+  const SCROLL_THRESHOLD = 80;
+  const HIDE_TRIGGER = 100;
+
+  function update() {
+    const y = window.scrollY;
+    const delta = y - lastScrollY;
+
+    if (y < SCROLL_THRESHOLD) {
+      // Top of page — always show
+      nav.classList.remove('nav-hidden');
+      nav.classList.remove('nav-floating');
+      isHidden = false;
+    } else if (delta > 5 && y > HIDE_TRIGGER) {
+      // Scrolling down — hide
+      nav.classList.add('nav-hidden');
+      isHidden = true;
+    } else if (delta < -5) {
+      // Scrolling up — show as floating
+      nav.classList.remove('nav-hidden');
+      nav.classList.add('nav-floating');
+      isHidden = false;
+    }
+
+    lastScrollY = y;
+  }
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => { update(); ticking = false; });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Cursor-to-top reveal: when mouse enters top 14px zone, show nav
+  zone.addEventListener('mouseenter', () => {
+    if (window.scrollY > SCROLL_THRESHOLD) {
+      nav.classList.remove('nav-hidden');
+      nav.classList.add('nav-floating');
+    }
+  });
+
+  // On mobile / no mouse — also reveal when user taps near top
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches[0].clientY < 30 && window.scrollY > SCROLL_THRESHOLD) {
+      nav.classList.remove('nav-hidden');
+      nav.classList.add('nav-floating');
+    }
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>
