@@ -88,7 +88,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-haiku-4-5";
+    const MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-6";
     const userPrompt = `Проаналізуй наступне резюме:
 
 ${position_context ? `КОНТЕКСТ: HR розглядає кандидата на посаду — "${position_context}".\n\n` : ""}${candidate_name_hint ? `Підказка по імені: ${candidate_name_hint}\n\n` : ""}--- РЕЗЮМЕ ---
@@ -108,7 +108,10 @@ ${resume_text.slice(0, 25000)}
         model: MODEL,
         max_tokens: 4096,
         system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userPrompt }],
+        messages: [
+          { role: "user", content: userPrompt },
+          { role: "assistant", content: "{" }
+        ],
       }),
     });
 
@@ -130,7 +133,9 @@ ${resume_text.slice(0, 25000)}
     }
 
     const result = await aiResp.json();
-    const rawText = result.content?.[0]?.text || "";
+    let rawText = result.content?.[0]?.text || "";
+    // Because we prefilled with "{", prepend it back
+    rawText = "{" + rawText;
     console.log("AI raw response length:", rawText.length, "preview:", rawText.slice(0, 200));
 
     // Aggressive JSON extraction — handle multiple wrapping styles
