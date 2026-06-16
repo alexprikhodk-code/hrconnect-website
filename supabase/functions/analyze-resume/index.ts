@@ -88,7 +88,13 @@ serve(async (req: Request) => {
       });
     }
 
-    const MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-6";
+    const MODEL_OVERRIDE = Deno.env.get("ANTHROPIC_MODEL");
+const MODEL_CHAIN = MODEL_OVERRIDE ? [MODEL_OVERRIDE] : [
+  "claude-opus-4-8",        // newest, most capable
+  "claude-sonnet-4-6",      // balanced
+  "claude-haiku-4-5",       // fastest fallback
+];
+let MODEL = MODEL_CHAIN[0]; // will be updated in loop
     const userPrompt = `Проаналізуй наступне резюме:
 
 ${position_context ? `КОНТЕКСТ: HR розглядає кандидата на посаду — "${position_context}".\n\n` : ""}${candidate_name_hint ? `Підказка по імені: ${candidate_name_hint}\n\n` : ""}--- РЕЗЮМЕ ---
@@ -97,7 +103,13 @@ ${resume_text.slice(0, 25000)}
 
 Поверни лише валідний JSON за вказаною схемою.`;
 
-    const aiResp = await fetch("https://api.anthropic.com/v1/messages", {
+    let aiResp: Response | null = null;
+    let lastErrText = "";
+    let lastErrStatus = 0;
+    for (const modelTry of MODEL_CHAIN) {
+      MODEL = modelTry;
+      console.log(`Trying model: ${MODEL}`);
+      aiResp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "x-api-key": ANTHROPIC_KEY,
@@ -108,68 +120,97 @@ ${resume_text.slice(0, 25000)}
         model: MODEL,
         max_tokens: 4096,
         system: SYSTEM_PROMPT,
-        messages: [
-          { role: "user", content: userPrompt },
-          { role: "assistant", content: "{" }
-        ],
+        tools: [{
+          name: "submit_candidate_analysis",
+          description: "Submit the structured analysis of the candidate based on the resume",
+          input_schema: {
+            type: "object",
+            properties: {
+              name: { type: ["string","null"], description: "Full name from resume" },
+              position: { type: ["string","null"], description: "Current/last position" },
+              age: { type: ["number","null"] },
+              email: { type: ["string","null"] },
+              phone: { type: ["string","null"] },
+              verdict: { type: "string", enum: ["Перформер","Делатель"] },
+              verdict_confidence: { type: "string", enum: ["низька","помірна","висока"] },
+              verdict_score: { type: "number" },
+              verdict_reasons: { type: "array", items: { type: "string" } },
+              product_self: { type: ["string","null"] },
+              iq: { type: ["number","null"], minimum: 70, maximum: 145 },
+              iq_band: { type: ["string","null"] },
+              iq_summary: { type: ["string","null"] },
+              reproduction: { type: ["number","null"], minimum: 0, maximum: 100 },
+              reproduction_band: { type: ["string","null"] },
+              reproduction_summary: { type: ["string","null"] },
+              enneagram_type: { type: ["number","null"], minimum: 1, maximum: 9 },
+              enneagram_summary: { type: ["string","null"] },
+              disc_dominant: { type: ["string","null"], enum: ["D","I","S","C", null] },
+              disc_profile: { type: ["string","null"] },
+              disc_summary: { type: ["string","null"] },
+              bigfive_dominant: { type: ["string","null"], enum: ["O","C","E","A","N", null] },
+              bigfive_scores: { type: ["object","null"] },
+              bigfive_summary: { type: ["string","null"] },
+              points: { type: ["object","null"], description: "10 traits A-J with score/level/thesis/full" },
+              strengths: { type: "array", items: { type: "string" } },
+              risks: { type: "array", items: { type: "string" } },
+              recommendation: { type: "string" },
+              missing_data: { type: "array", items: { type: "string" } }
+            },
+            required: ["verdict","verdict_confidence","verdict_score","verdict_reasons","strengths","risks","recommendation"]
+          }
+        }],
+        tool_choice: { type: "tool", name: "submit_candidate_analysis" },
+        messages: [{ role: "user", content: userPrompt }],
       }),
-    });
+      });
+      // If success or non-model-related error → break
+      if (aiResp.ok) break;
+      lastErrText = await aiResp.text();
+      lastErrStatus = aiResp.status;
+      console.warn(`Model ${MODEL} failed:`, aiResp.status, lastErrText.slice(0, 300));
+      // Only continue to next model on 404 (model not found) or 400 (bad model)
+      if (aiResp.status !== 404 && aiResp.status !== 400) break;
+    }
+    if (!aiResp) {
+      return new Response(JSON.stringify({ error: "No model attempted (chain empty)" }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
 
     if (!aiResp.ok) {
-      const errText = await aiResp.text();
-      console.error("Anthropic API error", aiResp.status, errText);
-      let errParsed = null;
-      try { errParsed = JSON.parse(errText); } catch(e) {}
-      const errMsg = errParsed?.error?.message || errText.slice(0, 400);
+      console.error("All models failed. Last error:", aiResp.status, lastErrText.slice(0, 500));
+      let errParsed: any = null;
+      try { errParsed = JSON.parse(lastErrText); } catch(e) {}
+      const errMsg = errParsed?.error?.message || lastErrText.slice(0, 400);
       return new Response(JSON.stringify({
-        error: `Anthropic ${aiResp.status}: ${errMsg}`,
-        status: aiResp.status,
-        details: errParsed || errText.slice(0, 800),
-        model_used: MODEL
+        error: `Жодна з моделей не відповіла. Остання помилка (${aiResp.status}): ${errMsg}`,
+        tried_models: MODEL_CHAIN,
+        last_model: MODEL,
+        details: errParsed || lastErrText.slice(0, 800)
       }), {
-        status: 200, // return 200 so Supabase SDK doesn't wrap error
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
     const result = await aiResp.json();
-    let rawText = result.content?.[0]?.text || "";
-    // Because we prefilled with "{", prepend it back
-    rawText = "{" + rawText;
-    console.log("AI raw response length:", rawText.length, "preview:", rawText.slice(0, 200));
+    console.log("AI response stop_reason:", result.stop_reason, "content blocks:", result.content?.length);
 
-    // Aggressive JSON extraction — handle multiple wrapping styles
-    function extractJson(text: string): any {
-      let candidates: string[] = [];
-      // 1) Try whole text as JSON
-      candidates.push(text.trim());
-      // 2) Try inside ```json ... ``` block
-      const fence = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
-      if (fence) candidates.push(fence[1].trim());
-      // 3) Try slicing from first { to last }
-      const firstBrace = text.indexOf("{");
-      const lastBrace = text.lastIndexOf("}");
-      if (firstBrace >= 0 && lastBrace > firstBrace) {
-        candidates.push(text.slice(firstBrace, lastBrace + 1));
-      }
-      // Try each candidate
-      for (const c of candidates) {
-        try { return JSON.parse(c); } catch (e) { /* try next */ }
-      }
-      return null;
-    }
-
-    const analysis = extractJson(rawText);
-    if (!analysis) {
-      console.error("Could not parse JSON from AI response. Raw:", rawText.slice(0, 1500));
+    // Find the tool_use block in the response
+    const toolUseBlock = result.content?.find((b: any) => b.type === "tool_use" && b.name === "submit_candidate_analysis");
+    if (!toolUseBlock) {
+      console.error("No tool_use block found. Full response:", JSON.stringify(result).slice(0, 1500));
       return new Response(JSON.stringify({
-        error: "AI повернув не-JSON. Можливо, модель додала пояснення навколо JSON або не зрозуміла формат.",
-        raw_preview: rawText.slice(0, 1500),
+        error: "AI не викликав tool_use. Можливо модель не підтримує tools.",
+        raw_response: result,
         model_used: MODEL
       }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
+
+    const analysis = toolUseBlock.input;
+    console.log("Analysis extracted via tool_use:", Object.keys(analysis));
 
     const meta = {
       model: MODEL,
