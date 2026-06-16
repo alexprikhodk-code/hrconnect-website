@@ -89,6 +89,9 @@
 .ts-card.done { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1.5px solid #86efac; box-shadow: 0 2px 8px rgba(34,197,94,.12); }
 .ts-card.done:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34,197,94,.2); }
 .ts-card.pending { background: #f8fafc; border: 1.5px dashed #cbd5e1; opacity: 0.7; }
+.ts-card.ai { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 1.5px solid #c084fc; box-shadow: 0 2px 8px rgba(168,85,247,.12); }
+.ts-card-tag.ai { background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: white; }
+.ts-card.ai .ts-res { color: #6b21a8; }
 .ts-ic { font-size: 24px; line-height: 1; margin-bottom: 4px; }
 .ts-name { font-size: 12px; font-weight: 700; color: #0f172a; }
 .ts-res { font-size: 11px; color: #166534; font-weight: 600; margin-top: 3px; line-height: 1.3; }
@@ -96,6 +99,7 @@
 .ts-card-tag.pending { background: #e2e8f0; color: #64748b; }
 .ts-note { margin-top: 14px; padding: 10px 14px; background: #f1f5f9; border-left: 3px solid var(--c-brand); border-radius: 6px; font-size: 12.5px; color: #475569; line-height: 1.5; }
 .ts-note.warn { background: #fef3c7; border-left-color: #f59e0b; color: #78350f; }
+.ts-note.ai { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-left-color: #a855f7; color: #581c87; }
 </style>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -406,15 +410,16 @@ function render(c) {
   const statusTxt = c.test_status === 'completed' ? '✓ Тест завершено' : '⏳ Очікує на проходження';
 
   // Determine which tests are completed
+  const isAi = c.source === 'resume_ai';
   const TEST_LIST = [
-    { id: 'productivity', ic: '📋', name: 'Продуктивність', done: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0), result: v.verdict ? v.label : null, url: '#productivity' },
-    { id: 'enneagram',    ic: '🌀', name: 'Еннеаграма',     done: c.enneagram_type != null, result: c.enneagram_type ? 'Тип ' + c.enneagram_type : null, url: '/app/enneagram.html?id=' + c.id },
-    { id: 'disc',         ic: '📊', name: 'DISC',            done: !!c.disc_dominant,        result: c.disc_profile || c.disc_dominant || null, url: '/app/disc.html?id=' + c.id },
-    { id: 'bigfive',      ic: '🌌', name: 'Big Five',        done: !!c.bigfive_dominant,     result: c.bigfive_dominant || null, url: '/app/bigfive.html?id=' + c.id },
-    { id: 'iq',           ic: '🧠', name: 'IQ',              done: c.iq != null,             result: c.iq != null ? c.iq + (c.iq_band ? ' · ' + c.iq_band : '') : null, url: '#iq' },
-    { id: 'reproduction', ic: '👁️', name: 'Відтворення',     done: c.reproduction != null,   result: c.reproduction != null ? c.reproduction + '%' : null, url: '#repr' }
+    { id: 'productivity', ic: '📋', name: 'Продуктивність', done: !isAi && (!!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0) || !!c.verdict), result: v.verdict ? v.label : null, url: '#productivity' },
+    { id: 'enneagram',    ic: '🌀', name: 'Еннеаграма',     done: !isAi && c.enneagram_type != null, result: c.enneagram_type ? 'Тип ' + c.enneagram_type : null, url: '/app/enneagram.html?id=' + c.id },
+    { id: 'disc',         ic: '📊', name: 'DISC',            done: !isAi && !!c.disc_dominant, result: c.disc_profile || c.disc_dominant || null, url: '/app/disc.html?id=' + c.id },
+    { id: 'bigfive',      ic: '🌌', name: 'Big Five',        done: !isAi && !!c.bigfive_dominant, result: c.bigfive_dominant || null, url: '/app/bigfive.html?id=' + c.id },
+    { id: 'iq',           ic: '🧠', name: 'IQ',              done: !isAi && c.iq != null,    result: c.iq != null ? c.iq + (c.iq_band ? ' · ' + c.iq_band : '') : null, url: '#iq' },
+    { id: 'reproduction', ic: '👁️', name: 'Відтворення',     done: !isAi && c.reproduction != null, result: c.reproduction != null ? c.reproduction + '%' : null, url: '#repr' }
   ];
-  const assigned = (c.assigned_tests && c.assigned_tests.length) ? c.assigned_tests : TEST_LIST.map(t => t.id);
+  const assigned = isAi ? TEST_LIST.map(t => t.id) : ((c.assigned_tests && c.assigned_tests.length) ? c.assigned_tests : TEST_LIST.map(t => t.id));
   const visibleTests = TEST_LIST.filter(t => assigned.includes(t.id));
   const completedTests = visibleTests.filter(t => t.done);
   const completedNames = completedTests.map(t => t.name).join(', ');
@@ -447,12 +452,15 @@ function render(c) {
     <div class="tests-strip-card">
       <div class="ts-title">
         <span>📦 Тести кандидата</span>
-        <span class="ts-count">${completedTests.length} з ${visibleTests.length} пройдено</span>
+        <span class="ts-count">${isAi ? '🤖 AI проаналізовано ' + visibleTests.length + ' з 6' : completedTests.length + ' з 6 пройдено'}</span>
       </div>
       <div class="ts-grid">
         ${visibleTests.map(t => {
-          const cls = t.done ? 'done' : 'pending';
-          const tag = t.done ? '<span class="ts-card-tag">✓ пройдено</span>' : '<span class="ts-card-tag pending">не пройдено</span>';
+          const cls = t.done ? 'done' : (isAi && t.result ? 'ai' : 'pending');
+          let tag;
+          if (t.done) tag = '<span class="ts-card-tag">✓ пройдено</span>';
+          else if (isAi && t.result) tag = '<span class="ts-card-tag ai">🤖 AI-аналіз</span>';
+          else tag = '<span class="ts-card-tag pending">не пройдено</span>';
           return `<${t.done ? 'a' : 'div'} ${t.done && !t.url.startsWith('#') ? 'href="' + t.url + '"' : ''} class="ts-card ${cls}">
             <div class="ts-ic">${t.ic}</div>
             <div class="ts-name">${t.name}</div>
@@ -461,9 +469,11 @@ function render(c) {
           </${t.done ? 'a' : 'div'}>`;
         }).join('')}
       </div>
-      <div class="ts-note ${partial ? 'warn' : ''}">
-        ${partial ? '⚠ ' : 'ℹ '} ${verdictBasis}
-        ${partial && completedTests.find(t => t.id === 'productivity') ? ' Решта тестів дозволять уточнити картину та виявити ризики, які один тест не показує.' : ''}
+      <div class="ts-note ${isAi ? 'ai' : (partial ? 'warn' : '')}">
+        ${isAi 
+          ? '🤖 <strong>Це AI-аналіз з резюме, не результати живих тестів.</strong> Для уточнення вердикту радимо запросити кандидата пройти всі 6 живих тестів через посилання — результати поєднаються з AI-аналізом.'
+          : (partial ? '⚠ ' : 'ℹ ') + verdictBasis + (partial && completedTests.find(t => t.id === 'productivity') ? ' Решта тестів дозволять уточнити картину та виявити ризики, які один тест не показує.' : '')
+        }
       </div>
     </div>
   `;

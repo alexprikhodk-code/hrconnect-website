@@ -1,14 +1,24 @@
 // AI-HRconnect — Universal recommendation builder
-// Works with ANY combination of completed tests; updates as more data arrives.
-// All functions are window-global so any page can import this single file.
+// Distinguishes AI-resume candidates (preliminary) from live-test candidates (validated).
 
 (function (g) {
   'use strict';
 
-  // Helpers — which tests have data
+  function isAiSource(c) {
+    return c && c.source === 'resume_ai';
+  }
+
+  // Helpers — which tests have data (only counts LIVE tests, not AI analysis)
   function whatIsDone(c) {
+    if (isAiSource(c)) {
+      // AI candidate: no live tests done — analysis is preliminary
+      return {
+        productivity: false, enneagram: false, disc: false,
+        bigfive: false, iq: false, reproduction: false
+      };
+    }
     return {
-      productivity: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0),
+      productivity: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0) || !!c.verdict,
       enneagram:    c.enneagram_type != null,
       disc:         !!c.disc_dominant,
       bigfive:      !!c.bigfive_dominant,
@@ -17,27 +27,35 @@
     };
   }
 
-  function countDone(has) { return Object.values(has).filter(Boolean).length; }
+  // What data is AVAILABLE (live OR AI)
+  function whatIsAvailable(c) {
+    return {
+      productivity: !!c.productivity_completed_at || !!c.raw_answers || (c.points && Object.keys(c.points).length > 0) || !!c.verdict,
+      enneagram:    c.enneagram_type != null,
+      disc:         !!c.disc_dominant,
+      bigfive:      !!c.bigfive_dominant,
+      iq:           c.iq != null,
+      reproduction: c.reproduction != null
+    };
+  }
 
-  // Sub-conclusion: productivity verdict (uses stored c.verdict if present)
-  function productivityConclusion(c, has) {
-    if (!has.productivity) return null;
-    const verdict = c.verdict; // 'Перформер' | 'Делатель'
-    const confidence = c.verdict_confidence || 'помірна';
-    const score = c.verdict_score ?? 0;
+  function countDone(map) { return Object.values(map).filter(Boolean).length; }
+
+  function productivityConclusion(c, avail) {
+    if (!avail.productivity) return null;
+    const verdict = c.verdict;
     if (!verdict) return null;
     return {
       label: verdict === 'Перформер' ? 'Продуктивний' : 'Виконавець',
       raw: verdict,
-      score,
-      confidence,
+      score: c.verdict_score ?? 0,
+      confidence: c.verdict_confidence || 'помірна',
       isStrong: verdict === 'Перформер'
     };
   }
 
-  // Sub-conclusion: cognitive (IQ + reproduction)
-  function cognitiveConclusion(c, has) {
-    if (!has.iq && !has.reproduction) return null;
+  function cognitiveConclusion(c, avail) {
+    if (!avail.iq && !avail.reproduction) return null;
     const iq = c.iq;
     let lvl = null, label = null;
     if (iq != null) {
@@ -49,65 +67,88 @@
     return { lvl, label, iq, reproduction: c.reproduction };
   }
 
-  // Sub-conclusion: personality (Enneagram + DISC + Big Five)
-  function personalityConclusion(c, has) {
-    if (!has.enneagram && !has.disc && !has.bigfive) return null;
+  function personalityConclusion(c, avail) {
+    if (!avail.enneagram && !avail.disc && !avail.bigfive) return null;
     const parts = [];
-    if (has.enneagram) parts.push('Тип ' + c.enneagram_type);
-    if (has.disc) parts.push('DISC: ' + (c.disc_profile || c.disc_dominant));
-    if (has.bigfive) parts.push('Big Five: ' + c.bigfive_dominant);
+    if (avail.enneagram) parts.push('Тип ' + c.enneagram_type);
+    if (avail.disc) parts.push('DISC: ' + (c.disc_profile || c.disc_dominant));
+    if (avail.bigfive) parts.push('Big Five: ' + c.bigfive_dominant);
     return { label: parts.join(' · '), parts };
   }
 
-  // ===================================================================
-  // Main entry — returns rich recommendation object
-  // ===================================================================
   function computeRecommendation(c) {
-    const has = whatIsDone(c);
-    const done = countDone(has);
+    const aiSource = isAiSource(c);
+    const avail = whatIsAvailable(c);
+    const done = whatIsDone(c);
+    const doneCount = countDone(done);
+    const availCount = countDone(avail);
     const total = 6;
-    const completeness = Math.round(done / total * 100);
+    const completeness = Math.round(availCount / total * 100);
 
-    const missingNames = {
-      productivity: 'Продуктивність',
-      enneagram:    'Еннеаграма',
-      disc:         'DISC',
-      bigfive:      'Big Five',
-      iq:           'IQ',
-      reproduction: 'Відтворення'
+    const TEST_NAMES = {
+      productivity: 'Продуктивність', enneagram: 'Еннеаграма',
+      disc: 'DISC', bigfive: 'Big Five', iq: 'IQ', reproduction: 'Відтворення'
     };
-    const missing = Object.keys(has).filter(k => !has[k]).map(k => missingNames[k]);
-    const doneList = Object.keys(has).filter(k => has[k]).map(k => missingNames[k]);
+    const missingLiveTests = Object.keys(avail).filter(k => !done[k]).map(k => TEST_NAMES[k]);
+    const doneListLive = Object.keys(done).filter(k => done[k]).map(k => TEST_NAMES[k]);
 
-    // === Edge case: no tests yet ===
-    if (done === 0) {
+    // === AI-source candidate — special branch ===
+    if (aiSource) {
+      const perform = productivityConclusion(c, avail);
+      const cognitive = cognitiveConclusion(c, avail);
+      let label, shortLabel, icon, cls;
+      if (perform && perform.isStrong) {
+        label = 'AI: Рекомендовано (попередньо)';
+        shortLabel = 'AI: Рекомендовано';
+        icon = '🤖✓'; cls = 'green';
+      } else if (perform && !perform.isStrong) {
+        label = 'AI: Виконавча роль (попередньо)';
+        shortLabel = 'AI: Виконавча';
+        icon = '🤖⚠'; cls = 'amber';
+      } else {
+        label = 'AI: попередній аналіз';
+        shortLabel = 'AI-аналіз';
+        icon = '🤖'; cls = 'gray';
+      }
       return {
-        label: 'Очікує проходження тестів',
-        shortLabel: 'Очікує',
-        icon: '⏳', cls: 'gray',
+        label, shortLabel, icon, cls,
+        isAi: true,
+        confidence: 'попередня (з резюме)',
+        completeness, done: 0, total,
+        doneList: [], missing: Object.values(TEST_NAMES),
+        description: 'Попередня оцінка на основі AI-аналізу резюме. Радимо запросити кандидата пройти 6 живих тестів для остаточного рішення.',
+        caveats: ['Радимо доповнити живими тестами для підтвердження'],
+        perform, cognitive,
+        nextSteps: ['Запросити кандидата пройти 6 живих тестів через посилання']
+      };
+    }
+
+    // === No data at all ===
+    if (doneCount === 0) {
+      return {
+        label: 'Очікує проходження тестів', shortLabel: 'Очікує',
+        icon: '⏳', cls: 'gray', isAi: false,
         confidence: '—',
-        completeness, done, total,
-        doneList, missing,
+        completeness: 0, done: 0, total,
+        doneList: [], missing: Object.values(TEST_NAMES),
         description: 'Кандидат ще не пройшов жодного тесту. Надішліть посилання на тестування.',
+        caveats: [],
         nextSteps: ['Надіслати кандидату посилання на тестування']
       };
     }
 
-    // Build sub-conclusions
-    const perform = productivityConclusion(c, has);
-    const cognitive = cognitiveConclusion(c, has);
-    const personality = personalityConclusion(c, has);
+    // === Normal candidate with live tests ===
+    const perform = productivityConclusion(c, done);
+    const cognitive = cognitiveConclusion(c, done);
+    const personality = personalityConclusion(c, done);
 
-    // === Decide main label ===
     let label, shortLabel, icon, cls;
     const caveats = [];
 
     if (perform && perform.isStrong) {
-      // Strong productivity → green
       label = 'Рекомендовано до співбесіди + найму';
       shortLabel = 'Рекомендовано';
       icon = '✓'; cls = 'green';
-      // Caveat if IQ low
       if (cognitive && cognitive.lvl === 'low') {
         label = 'Рекомендовано з застереженням';
         shortLabel = 'З застереженням';
@@ -115,7 +156,6 @@
         caveats.push('Низький IQ — переконайтесь, що роль не вимагає складного аналізу');
       }
     } else if (perform && !perform.isStrong) {
-      // Productive but executor → amber
       label = 'Виконавча роль з наглядом';
       shortLabel = 'Виконавча';
       icon = '⚠'; cls = 'amber';
@@ -123,65 +163,54 @@
         caveats.push('Високий IQ — здатний до розвитку, але не ініціативний');
       }
     } else if (!perform && cognitive) {
-      // No productivity, but IQ exists
       if (cognitive.lvl === 'high' || cognitive.lvl === 'aboveAvg') {
-        label = 'Розумний — перевірте продуктивність';
+        label = 'Розумний — потрібен тест на продуктивність';
         shortLabel = 'Розумний';
         icon = '🧠'; cls = 'amber';
-        caveats.push('Не пройдено тест на продуктивність — рекомендую дозамовити');
-      } else if (cognitive.lvl === 'avg') {
+      } else {
         label = 'Когнітивно прийнятний — потрібен тест на продуктивність';
         shortLabel = 'Часткові дані';
         icon = 'ℹ'; cls = 'gray';
-      } else {
-        label = 'Низький IQ + продуктивність невідома';
-        shortLabel = 'З застереженням';
-        icon = '⚠'; cls = 'amber';
-        caveats.push('Не пройдено тест на продуктивність');
       }
     } else if (!perform && !cognitive && personality) {
-      // Only personality
-      label = 'Профіль особистості виміряний — потрібні тести продуктивності та IQ';
+      label = 'Профіль особистості виміряний';
       shortLabel = 'Профіль є';
       icon = 'ℹ'; cls = 'gray';
-      caveats.push('Не пройдено тести продуктивності та IQ');
     } else {
       label = 'Часткові дані';
       shortLabel = 'Часткові';
       icon = 'ℹ'; cls = 'gray';
     }
 
-    // Confidence based on tests count
-    const confidence = done >= 5 ? 'висока' : (done >= 3 ? 'помірна' : 'низька');
+    // Add caveats ONLY about tests that are actually MISSING
+    if (missingLiveTests.length > 0 && missingLiveTests.length < 6) {
+      caveats.push('Не пройдено: ' + missingLiveTests.join(', ') + ' — рекомендую дозамовити');
+    }
 
-    // Build a longer description
+    const confidence = doneCount >= 5 ? 'висока' : (doneCount >= 3 ? 'помірна' : 'низька');
+
     const descParts = [];
-    if (perform) descParts.push(`Продуктивність: ${perform.label} (впевненість ${perform.confidence})`);
+    if (perform) descParts.push(`Продуктивність: ${perform.label} (впевн. ${perform.confidence})`);
     if (cognitive && cognitive.label) descParts.push(cognitive.label + (cognitive.iq != null ? ` (${cognitive.iq})` : ''));
     if (personality && personality.label) descParts.push(personality.label);
     const description = descParts.length ? descParts.join(' · ') : 'Часткові дані з тестів.';
 
-    // Next steps for HR
     const nextSteps = [];
-    if (missing.length > 0 && missing.length < 6) {
-      nextSteps.push('Дозамовити тести: ' + missing.join(', '));
-    }
-    if (caveats.length === 0 && perform && perform.isStrong && done < 6) {
-      nextSteps.push('Запустити решту тестів для повної картини');
+    if (missingLiveTests.length > 0 && missingLiveTests.length < 6) {
+      nextSteps.push('Дозамовити тести: ' + missingLiveTests.join(', '));
     }
 
     return {
-      label, shortLabel, icon, cls,
+      label, shortLabel, icon, cls, isAi: false,
       confidence,
-      completeness, done, total,
-      doneList, missing,
+      completeness, done: doneCount, total,
+      doneList: doneListLive, missing: missingLiveTests,
       caveats, description,
       perform, cognitive, personality,
       nextSteps
     };
   }
 
-  // Expose globals
   g.computeRecommendation = computeRecommendation;
-  g.AIHR_REC = { computeRecommendation, whatIsDone, countDone };
+  g.AIHR_REC = { computeRecommendation, whatIsDone, whatIsAvailable, isAiSource };
 })(typeof window !== 'undefined' ? window : this);
