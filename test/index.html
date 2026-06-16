@@ -168,8 +168,9 @@ body { background: #f5f7fa; }
   function isDone(test, c) {
     const t = TESTS[test];
     if (!t) return false;
+    // AI-source candidates: HR's AI analysis is not a "passed test" from candidate's view.
+    // Only the explicit *_completed_at timestamp counts (set when candidate actually finishes a live test).
     if (c[t.completedField]) return true;
-    if (t.altField && c[t.altField] && Object.keys(c[t.altField]).length > 0) return true;
     return false;
   }
 
