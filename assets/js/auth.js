@@ -18,6 +18,25 @@ async function signOut() {
   window.location.href = "/";
 }
 
+
+
+// === Google OAuth ===
+async function signInWithGoogle(redirectAfter = '/app/') {
+  const { data, error } = await window.sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + '/auth/callback.html?next=' + encodeURIComponent(redirectAfter),
+      queryParams: { access_type: 'offline', prompt: 'consent' }
+    }
+  });
+  if (error) {
+    console.error('Google OAuth error:', error);
+    alert('Помилка входу через Google: ' + error.message);
+    return null;
+  }
+  return data;
+}
+
 async function getMyProfile() {
   const user = await currentUser();
   if (!user) return null;

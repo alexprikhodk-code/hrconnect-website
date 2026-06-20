@@ -144,3 +144,47 @@ p { color: #1e293b; }
 
 /* Hover zone for cursor-reveal */
 .app-topbar-hover-zone { position: sticky; top: 0; height: 12px; z-index: 29; margin-bottom: -12px; }
+
+
+/* === Google OAuth button === */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: 1.5px solid #dadce0;
+  border-radius: 8px;
+  color: #3c4043;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: 16px;
+}
+.btn-google:hover {
+  background: #f8f9fa;
+  border-color: #c8cdd1;
+  box-shadow: 0 1px 3px rgba(60,64,67,.15);
+}
+.btn-google:active {
+  background: #f1f3f4;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+  color: var(--c-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--c-line);
+}
+.auth-divider span { padding: 0 14px; }
